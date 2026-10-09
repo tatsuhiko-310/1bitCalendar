@@ -67,15 +67,17 @@ header h1{ margin:0; font-size:20px; font-weight:400; letter-spacing:.04em; }
 .row .val{ color:var(--mute); font-size:13px; }
 .two{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
 label.check{ display:flex; align-items:center; gap:10px; min-height:36px; cursor:pointer; }
-input[type=range]{ width:100%; margin:6px 0; accent-color:var(--fg); }
-input[type=checkbox]{ width:20px; height:20px; accent-color:var(--fg); margin:0; }
+/* スライダー・チェックは2色で描く(ブラウザ標準のグレーを出さない) */
+input[type=range]{ -webkit-appearance:none; appearance:none; width:100%; height:28px; margin:2px 0; background:transparent; cursor:pointer; }
+input[type=range]::-webkit-slider-runnable-track{ height:8px; border:2px solid var(--fg); background:var(--panel); }
+input[type=range]::-moz-range-track{ height:4px; border:2px solid var(--fg); background:var(--panel); }
+input[type=range]::-webkit-slider-thumb{ -webkit-appearance:none; width:20px; height:24px; margin-top:-10px; border:0; border-radius:0; background:var(--fg); }
+input[type=range]::-moz-range-thumb{ width:20px; height:24px; border:0; border-radius:0; background:var(--fg); }
+input[type=checkbox]{ -webkit-appearance:none; appearance:none; flex:none; width:20px; height:20px; margin:0; border:2px solid var(--fg); border-radius:0; background:var(--panel); cursor:pointer; }
+input[type=checkbox]:checked{ background:var(--fg); box-shadow:inset 0 0 0 3px var(--panel); }
 select{
   font:inherit; color:var(--fg); background:var(--panel);
   border:2px solid var(--fg); border-radius:0; padding:8px 10px; min-height:44px; width:100%;
-}
-input[type=color]{
-  width:100%; height:44px; padding:2px; background:var(--panel);
-  border:2px solid var(--fg); border-radius:0; cursor:pointer;
 }
 .btn{
   font:inherit; color:var(--fg); background:var(--panel);
@@ -246,9 +248,21 @@ button:focus-visible,select:focus-visible,input:focus-visible{ outline:3px dashe
 
     <!-- 色 -->
     <div class="pane" id="pane-color" role="tabpanel" aria-labelledby="t-color" hidden>
-      <div class="two">
-        <div class="row"><label for="ink">ドットの色</label><input type="color" id="ink"></div>
-        <div class="row"><label for="paper">背景の色</label><input type="color" id="paper"></div>
+      <div class="seg" id="colorTarget" role="group" aria-label="調整する色">
+        <button type="button" data-c="ink" aria-pressed="true">ドットの色</button>
+        <button type="button" data-c="paper" aria-pressed="false">背景の色</button>
+      </div>
+      <div class="row">
+        <div class="top"><label for="hue">色相</label><span class="val" id="v-hue"></span></div>
+        <input type="range" id="hue" min="0" max="359" step="1">
+      </div>
+      <div class="row">
+        <div class="top"><label for="sat">鮮やかさ</label><span class="val" id="v-sat"></span></div>
+        <input type="range" id="sat" min="0" max="100" step="1">
+      </div>
+      <div class="row">
+        <div class="top"><label for="lit">明るさ</label><span class="val" id="v-lit"></span></div>
+        <input type="range" id="lit" min="0" max="100" step="1">
       </div>
       <button class="btn wide" id="swapColors" type="button">色を反転</button>
       <div class="row">
@@ -323,6 +337,7 @@ const S = {
   cal: { show: true, x: .5, y: .74, size: 1, year: now.getFullYear(), month: now.getMonth(),
          style: 'grid', weekStart: 0, lang: 'ja', font: 'DotGothic16', frame: true, bg: true },
   color: { ink: '#000000', paper: '#ffffff' },
+  hsl: { ink: [0, 0, 0], paper: [0, 0, 100] }, colorTarget: 'ink',
   guide: false, snap: true,
   calBox: null
 };
@@ -616,7 +631,11 @@ function syncUI() {
   $('#calSize').value = S.cal.size; $('#v-calSize').textContent = '×' + S.cal.size.toFixed(2);
   $('#calFont').value = S.cal.font; $('#calFrame').checked = S.cal.frame; $('#calBg').checked = S.cal.bg;
   $('#guide').setAttribute('aria-pressed', String(S.guide)); $('#snap').setAttribute('aria-pressed', String(S.snap));
-  $('#ink').value = S.color.ink; $('#paper').value = S.color.paper;
+  const hsl = S.hsl[S.colorTarget];
+  $('#hue').value = hsl[0]; $('#v-hue').textContent = hsl[0];
+  $('#sat').value = hsl[1]; $('#v-sat').textContent = hsl[1];
+  $('#lit').value = hsl[2]; $('#v-lit').textContent = hsl[2];
+  document.querySelectorAll('#colorTarget button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.c === S.colorTarget)));
   $('#size').value = S.W + 'x' + S.H;
   applyTheme();
 }
@@ -650,8 +669,18 @@ $('#calFont').addEventListener('change', async e => {
   try { await document.fonts.load(`16px "${S.cal.font}"`, '0123456789年月日火水木金土SMTWFJANUARYBCDEGHILOPRV'); } catch (_) {}
   schedule();
 });
-bindInput('#ink', t => S.color.ink = t.value);
-bindInput('#paper', t => S.color.paper = t.value);
+// 色: スライダー(HSL)で調整。色相を保つため HSL を別に持つ
+const toHSL = h => { const [r, g, b] = hex(h); return rgb2hsl(r, g, b).map(Math.round); };
+function setColors(ink, paper) {
+  S.color.ink = ink; S.color.paper = paper;
+  S.hsl = { ink: toHSL(ink), paper: toHSL(paper) };
+}
+['#hue', '#sat', '#lit'].forEach((id, i) => bindInput(id, t => {
+  const c = S.colorTarget, hsl = S.hsl[c];
+  hsl[i] = +t.value;
+  S.color[c] = toHex(hsl2rgb(hsl[0], hsl[1], hsl[2]));
+}));
+document.querySelectorAll('#colorTarget button').forEach(b => b.addEventListener('click', () => { S.colorTarget = b.dataset.c; syncUI(); }));
 
 function shiftMonth(delta) {
   const d = new Date(S.cal.year, S.cal.month + delta, 1);
@@ -676,7 +705,7 @@ PRESETS.forEach(([name, ink, paper]) => {
   const b = document.createElement('button');
   b.type = 'button'; b.className = 'sw'; b.title = name; b.setAttribute('aria-label', '配色: ' + name);
   b.style.background = `linear-gradient(135deg, ${ink} 50%, ${paper} 50%)`;
-  b.addEventListener('click', () => { S.color.ink = ink; S.color.paper = paper; syncUI(); schedule(); });
+  b.addEventListener('click', () => { setColors(ink, paper); syncUI(); schedule(); });
   sws.appendChild(b);
 });
 
@@ -825,7 +854,7 @@ const lum = rgb => {
   return .2126 * f(rgb[0]) + .7152 * f(rgb[1]) + .0722 * f(rgb[2]);
 };
 const ratio = (a, b) => { const x = lum(a), y = lum(b); return (Math.max(x, y) + .05) / (Math.min(x, y) + .05); };
-$('#swapColors').addEventListener('click', () => { const t = S.color.ink; S.color.ink = S.color.paper; S.color.paper = t; syncUI(); schedule(); });
+$('#swapColors').addEventListener('click', () => { const h = S.hsl; setColors(S.color.paper, S.color.ink); S.hsl = { ink: h.paper, paper: h.ink }; syncUI(); schedule(); });
 
 /* ---------- サイトの色をパレットに合わせる ---------- */
 function applyTheme() {
