@@ -49,7 +49,6 @@ header h1{ margin:0; font-size:20px; font-weight:400; letter-spacing:.04em; }
   margin:6px 12px 24px; background:var(--ink); color:var(--fg);
   border:2px solid var(--ink); box-shadow:4px 4px 0 var(--ink);
 }
-.hint{ margin:0; padding:8px 12px; font-size:13px; color:var(--mute); border-bottom:2px solid var(--fg); }
 #fs{ position:fixed; inset:0; z-index:60; background:var(--bg); display:none; cursor:pointer; }
 #fs.open{ display:block; }
 #fsCv{ width:100%; height:100%; object-fit:contain; display:block; }
@@ -154,7 +153,6 @@ button:focus-visible,select:focus-visible,input:focus-visible{ outline:3px dashe
   </section>
 
   <section class="panel">
-    <p class="hint">カレンダーの上をドラッグするとカレンダー、それ以外は写真が動きます。2本指でも拡大できます。</p>
     <div class="tabs" role="tablist">
       <button role="tab" id="t-photo" aria-selected="true" aria-controls="pane-photo" data-tab="photo" aria-label="写真" title="写真"><svg class="ico" data-ico="photo" aria-hidden="true"></svg></button>
       <button role="tab" id="t-cal" aria-selected="false" aria-controls="pane-cal" data-tab="cal" aria-label="カレンダー" title="カレンダー"><svg class="ico" data-ico="cal" aria-hidden="true"></svg></button>
