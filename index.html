@@ -58,7 +58,9 @@ header h1{ margin:0; font-size:20px; font-weight:400; letter-spacing:.04em; }
 .tabs button{
   font:inherit; color:var(--fg); background:transparent; border:0; border-right:2px solid var(--fg);
   min-height:44px; padding:6px 4px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
 }
+.ico{ width:32px; height:32px; display:block; fill:currentColor; shape-rendering:crispEdges; }
 .tabs button:last-child{ border-right:0; }
 .tabs button[aria-selected="true"]{ background:var(--fg); color:var(--on-fg); }
 /* 全タブを同じ場所に重ね、一番長いタブの高さにそろえる(切り替えてもタブの位置が動かない) */
@@ -154,10 +156,10 @@ button:focus-visible,select:focus-visible,input:focus-visible{ outline:3px dashe
   <section class="panel">
     <p class="hint">カレンダーの上をドラッグするとカレンダー、それ以外は写真が動きます。2本指でも拡大できます。</p>
     <div class="tabs" role="tablist">
-      <button role="tab" id="t-photo" aria-selected="true" aria-controls="pane-photo" data-tab="photo">写真</button>
-      <button role="tab" id="t-cal" aria-selected="false" aria-controls="pane-cal" data-tab="cal">カレンダー</button>
-      <button role="tab" id="t-color" aria-selected="false" aria-controls="pane-color" data-tab="color">色</button>
-      <button role="tab" id="t-out" aria-selected="false" aria-controls="pane-out" data-tab="out">出力</button>
+      <button role="tab" id="t-photo" aria-selected="true" aria-controls="pane-photo" data-tab="photo" aria-label="写真" title="写真"><svg class="ico" data-ico="photo" aria-hidden="true"></svg></button>
+      <button role="tab" id="t-cal" aria-selected="false" aria-controls="pane-cal" data-tab="cal" aria-label="カレンダー" title="カレンダー"><svg class="ico" data-ico="cal" aria-hidden="true"></svg></button>
+      <button role="tab" id="t-color" aria-selected="false" aria-controls="pane-color" data-tab="color" aria-label="色" title="色"><svg class="ico" data-ico="color" aria-hidden="true"></svg></button>
+      <button role="tab" id="t-out" aria-selected="false" aria-controls="pane-out" data-tab="out" aria-label="出力" title="出力"><svg class="ico" data-ico="out" aria-hidden="true"></svg></button>
     </div>
 
     <div class="panes">
@@ -1121,6 +1123,71 @@ document.addEventListener('change', e => {
   const t = e.target;
   if (t.type === 'checkbox') t.checked ? sfx.on() : sfx.off();
   else if (t.tagName === 'SELECT') sfx.click();
+});
+
+/* ---------- タブのドットアイコン(# が1ドット。16×16に中央寄せ) ---------- */
+const ICONS = {
+  photo: [
+    '....####......',
+    '.############.',
+    '.#.......##.#.',
+    '.#...####...#.',
+    '.#..#....#..#.',
+    '.#..#....#..#.',
+    '.#..#....#..#.',
+    '.#...####...#.',
+    '.#..........#.',
+    '.############.'
+  ],
+  cal: [
+    '...#.....#...',
+    '.###########.',
+    '.###########.',
+    '.#.........#.',
+    '.#.#.#.#.#.#.',
+    '.#.........#.',
+    '.#.#.#.#.#.#.',
+    '.#.........#.',
+    '.#.#.#.#...#.',
+    '.#.........#.',
+    '.###########.'
+  ],
+  color: [
+    '....######....',
+    '..##......##..',
+    '.#..##..##..#.',
+    '#...##..##...#',
+    '#.##.......##.',
+    '#.##......#...',
+    '#.........#...',
+    '#..##......##.',
+    '.#.##.......#.',
+    '..##......##..',
+    '....######....'
+  ],
+  out: [
+    '############..',
+    '#..#######..#.',
+    '#..####.##..##',
+    '#..####.##...#',
+    '#..#######...#',
+    '#............#',
+    '#............#',
+    '#.##########.#',
+    '#.#........#.#',
+    '#.#........#.#',
+    '#.#........#.#',
+    '#.#........#.#',
+    '##############'
+  ]
+};
+document.querySelectorAll('svg.ico').forEach(svg => {
+  const rows = ICONS[svg.dataset.ico], h = rows.length, w = Math.max(...rows.map(r => r.length));
+  const ox = Math.floor((16 - w) / 2), oy = Math.floor((16 - h) / 2);
+  let d = '';
+  rows.forEach((r, y) => [...r].forEach((c, x) => { if (c === '#') d += `M${x + ox} ${y + oy}h1v1h-1z`; }));
+  svg.setAttribute('viewBox', '0 0 16 16');
+  svg.innerHTML = `<path d="${d}"/>`;
 });
 
 /* ---------- 起動 ---------- */
