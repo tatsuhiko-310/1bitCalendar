@@ -110,6 +110,11 @@ button:focus-visible,select:focus-visible,input:focus-visible{ outline:3px dashe
 .seg button{ font:inherit; color:var(--fg); background:var(--panel); border:0; min-height:40px; cursor:pointer; }
 .seg button + button{ border-left:2px solid var(--fg); }
 .seg button[aria-pressed="true"]{ background:var(--fg); color:var(--on-fg); }
+/* 色の切り替え: ボタン自体をその色で塗り、選択中は内側の枠で示す */
+#colorTarget button[data-c="ink"]{ background:var(--ink); color:var(--paper); }
+#colorTarget button[data-c="paper"]{ background:var(--paper); color:var(--ink); }
+#colorTarget button[data-c="ink"][aria-pressed="true"]{ box-shadow:inset 0 0 0 4px var(--ink), inset 0 0 0 7px var(--paper); }
+#colorTarget button[data-c="paper"][aria-pressed="true"]{ box-shadow:inset 0 0 0 4px var(--paper), inset 0 0 0 7px var(--ink); }
 
 #crop{ position:fixed; inset:0; z-index:70; background:var(--bg); color:var(--fg); display:none; flex-direction:column; gap:10px; padding:calc(env(safe-area-inset-top,0px) + 10px) 10px calc(env(safe-area-inset-bottom,0px) + 10px); }
 #crop.open{ display:flex; }
