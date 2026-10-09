@@ -61,8 +61,10 @@ header h1{ margin:0; font-size:20px; font-weight:400; letter-spacing:.04em; }
 }
 .tabs button:last-child{ border-right:0; }
 .tabs button[aria-selected="true"]{ background:var(--fg); color:var(--on-fg); }
-.pane{ padding:14px 12px 16px; display:grid; gap:14px; }
-.pane[hidden]{ display:none; }
+/* 全タブを同じ場所に重ね、一番長いタブの高さにそろえる(切り替えてもタブの位置が動かない) */
+.panes{ display:grid; }
+.pane{ grid-area:1/1; align-self:start; padding:14px 12px 16px; display:grid; gap:14px; }
+.pane[hidden]{ display:grid; visibility:hidden; }
 
 .row{ display:grid; gap:4px; }
 .row .top{ display:flex; justify-content:space-between; align-items:baseline; gap:8px; }
@@ -158,6 +160,7 @@ button:focus-visible,select:focus-visible,input:focus-visible{ outline:3px dashe
       <button role="tab" id="t-out" aria-selected="false" aria-controls="pane-out" data-tab="out">出力</button>
     </div>
 
+    <div class="panes">
     <!-- 写真 -->
     <div class="pane" id="pane-photo" role="tabpanel" aria-labelledby="t-photo">
       <div>
@@ -291,6 +294,7 @@ button:focus-visible,select:focus-visible,input:focus-visible{ outline:3px dashe
       </div>
       <button class="btn primary wide" id="save" type="button">PNGで保存する</button>
       <p id="msg" role="status" aria-live="polite"></p>
+    </div>
     </div>
   </section>
 </main>
