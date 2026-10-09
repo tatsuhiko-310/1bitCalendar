@@ -36,7 +36,7 @@ header h1{ margin:0; font-size:20px; font-weight:400; letter-spacing:.04em; }
   background:var(--bg); padding:10px;
 }
 .cvbox{ flex:1; min-height:0; display:flex; align-items:center; justify-content:center; }
-.seg.tools{ grid-template-columns:repeat(3,1fr); width:100%; max-width:420px; margin:0 auto; flex:none; }
+.seg.tools{ grid-template-columns:repeat(4,1fr); width:100%; max-width:480px; margin:0 auto; flex:none; }
 #cv{
   display:block; touch-action:none; cursor:grab;
   border:2px solid var(--fg); box-shadow:4px 4px 0 var(--fg);
@@ -144,6 +144,7 @@ button:focus-visible,select:focus-visible,input:focus-visible{ outline:3px dashe
     <div class="seg tools">
       <button type="button" id="guide" aria-pressed="false">ガイド</button>
       <button type="button" id="snap" aria-pressed="true">スナップ</button>
+      <button type="button" id="sound" aria-pressed="true">音</button>
       <button type="button" id="fsOpen">全画面</button>
     </div>
   </section>
@@ -342,7 +343,7 @@ const S = {
          style: 'grid', weekStart: 0, lang: 'ja', font: 'DotGothic16', frame: true, bg: true },
   color: { ink: '#000000', paper: '#ffffff' },
   hsl: { ink: [0, 0, 0], paper: [0, 0, 100] }, colorTarget: 'ink',
-  guide: false, snap: true,
+  guide: false, snap: true, sound: true,
   calBox: null
 };
 
@@ -635,6 +636,7 @@ function syncUI() {
   $('#calSize').value = S.cal.size; $('#v-calSize').textContent = '×' + S.cal.size.toFixed(2);
   $('#calFont').value = S.cal.font; $('#calFrame').checked = S.cal.frame; $('#calBg').checked = S.cal.bg;
   $('#guide').setAttribute('aria-pressed', String(S.guide)); $('#snap').setAttribute('aria-pressed', String(S.snap));
+  $('#sound').setAttribute('aria-pressed', String(S.sound));
   const hsl = S.hsl[S.colorTarget];
   $('#hue').value = hsl[0]; $('#v-hue').textContent = hsl[0];
   $('#sat').value = hsl[1]; $('#v-sat').textContent = hsl[1];
@@ -669,6 +671,7 @@ bindInput('#calFrame', t => S.cal.frame = t.checked, 'change');
 bindInput('#calBg', t => S.cal.bg = t.checked, 'change');
 $('#guide').addEventListener('click', () => { S.guide = !S.guide; syncUI(); schedule(); });
 $('#snap').addEventListener('click', () => { S.snap = !S.snap; syncUI(); schedule(); });
+$('#sound').addEventListener('click', () => { S.sound = !S.sound; syncUI(); });
 $('#calFont').addEventListener('change', async e => {
   S.cal.font = e.target.value; schedule();
   try { await document.fonts.load(`16px "${S.cal.font}"`, '0123456789年月日火水木金土SMTWFJANUARYBCDEGHILOPRV'); } catch (_) {}
@@ -781,8 +784,11 @@ cv.addEventListener('pointermove', e => {
   else if (ptrs.size === 1 && start) {
     const p = toCanvas(e), o = target === 'cal' ? S.cal : S.photo;
     o.x = start.ox + (p.x - start.px) / S.W; o.y = start.oy + (p.y - start.py) / S.H;
+    // 新しい位置に吸着した瞬間だけ音を鳴らす
+    const key = () => snapG.xs.join() + '|' + snapG.ys.join(), was = key();
     snapG = { xs: [], ys: [] };
     if (S.snap) snapTo(o, 14 * S.W / cv.getBoundingClientRect().width);
+    if (key() !== '|' && key() !== was) sfx.snap();
     schedule();
   }
 });
@@ -829,6 +835,7 @@ $('#save').addEventListener('click', async () => {
     if (!blob) throw new Error('toBlob');
     if (dl) await dl.save({ filename: name, data: blob });
     else download(blob, name);
+    sfx.save();
   } catch (err) {
     if (err && err.code === 'declined') msg.textContent = '保存をキャンセルしました。';
     else showOverlay(img);
@@ -1060,6 +1067,57 @@ function closeFs() {
 $('#fsOpen').addEventListener('click', openFs);
 fs.addEventListener('click', closeFs);
 document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement) fs.classList.remove('open'); });
+
+/* ---------- 効果音(矩形波のレトロな音。Web Audio で生成) ---------- */
+const sfx = (() => {
+  let ac = null, lastTick = 0;
+  const audio = () => {
+    if (!ac) { const A = window.AudioContext || window.webkitAudioContext; if (!A) return null; ac = new A(); }
+    if (ac.state === 'suspended') ac.resume();
+    return ac;
+  };
+  // notes: [周波数Hz, 長さ秒] を順に鳴らす
+  const play = (notes, vol = .05) => {
+    if (!S.sound) return;
+    const a = audio(); if (!a) return;
+    let t = a.currentTime + .005;
+    notes.forEach(([f, d]) => {
+      const o = a.createOscillator(), g = a.createGain();
+      o.type = 'square'; o.frequency.value = f;
+      g.gain.setValueAtTime(vol, t); g.gain.linearRampToValueAtTime(0, t + d);
+      o.connect(g).connect(a.destination); o.start(t); o.stop(t + d);
+      t += d;
+    });
+  };
+  return {
+    unlock: audio,
+    click: () => play([[880, .035]]),
+    on: () => play([[660, .03], [990, .045]]),
+    off: () => play([[990, .03], [660, .045]]),
+    snap: () => play([[1320, .02]], .04),
+    save: () => play([[523, .05], [659, .05], [784, .05], [1047, .09]]),
+    // スライダー: 値の位置で音程が変わる短いチック(鳴らしすぎない)
+    tick: r => { const n = performance.now(); if (n - lastTick < 40) return; lastTick = n; play([[220 + r * 880, .018]], .035); }
+  };
+})();
+// 最初の操作で音声を使えるようにする(ブラウザの自動再生制限のため)
+document.addEventListener('pointerdown', () => { if (S.sound) sfx.unlock(); }, { once: true });
+document.addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b || b.id === 'save') return;
+  if (b.hasAttribute('aria-pressed')) {
+    if (b.id === 'sound' && !S.sound) return;
+    b.getAttribute('aria-pressed') === 'true' ? sfx.on() : sfx.off();
+  } else sfx.click();
+});
+document.addEventListener('input', e => {
+  const t = e.target; if (t.type !== 'range') return;
+  sfx.tick((t.value - t.min) / (t.max - t.min));
+});
+document.addEventListener('change', e => {
+  const t = e.target;
+  if (t.type === 'checkbox') t.checked ? sfx.on() : sfx.off();
+  else if (t.tagName === 'SELECT') sfx.click();
+});
 
 /* ---------- 起動 ---------- */
 S.src = makeSample(); S.orig = S.src; S.crop = null;
