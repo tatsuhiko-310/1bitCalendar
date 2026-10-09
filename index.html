@@ -110,11 +110,7 @@ button:focus-visible,select:focus-visible,input:focus-visible{ outline:3px dashe
 .seg button{ font:inherit; color:var(--fg); background:var(--panel); border:0; min-height:40px; cursor:pointer; }
 .seg button + button{ border-left:2px solid var(--fg); }
 .seg button[aria-pressed="true"]{ background:var(--fg); color:var(--on-fg); }
-/* 色の切り替え: ボタン自体をその色で塗り、選択中は内側の枠で示す */
-#colorTarget button[data-c="ink"]{ background:var(--ink); color:var(--paper); }
-#colorTarget button[data-c="paper"]{ background:var(--paper); color:var(--ink); }
-#colorTarget button[data-c="ink"][aria-pressed="true"]{ box-shadow:inset 0 0 0 4px var(--ink), inset 0 0 0 7px var(--paper); }
-#colorTarget button[data-c="paper"][aria-pressed="true"]{ box-shadow:inset 0 0 0 4px var(--paper), inset 0 0 0 7px var(--ink); }
+.sec.hd{ display:flex; justify-content:space-between; align-items:baseline; }
 
 #crop{ position:fixed; inset:0; z-index:70; background:var(--bg); color:var(--fg); display:none; flex-direction:column; gap:10px; padding:calc(env(safe-area-inset-top,0px) + 10px) 10px calc(env(safe-area-inset-bottom,0px) + 10px); }
 #crop.open{ display:flex; }
@@ -261,21 +257,31 @@ button:focus-visible,select:focus-visible,input:focus-visible{ outline:3px dashe
 
     <!-- 色 -->
     <div class="pane" id="pane-color" role="tabpanel" aria-labelledby="t-color" hidden>
-      <div class="seg" id="colorTarget" role="group" aria-label="調整する色">
-        <button type="button" data-c="ink" aria-pressed="true">ドットの色</button>
-        <button type="button" data-c="paper" aria-pressed="false">背景の色</button>
+      <div class="sec hd"><span>ドットの色</span><span class="val" id="v-ink"></span></div>
+      <div class="row">
+        <div class="top"><label for="ink-h">色相</label><span class="val" id="v-ink-h"></span></div>
+        <input type="range" id="ink-h" data-c="ink" data-i="0" min="0" max="359" step="1">
       </div>
       <div class="row">
-        <div class="top"><label for="hue">色相</label><span class="val" id="v-hue"></span></div>
-        <input type="range" id="hue" min="0" max="359" step="1">
+        <div class="top"><label for="ink-s">鮮やかさ</label><span class="val" id="v-ink-s"></span></div>
+        <input type="range" id="ink-s" data-c="ink" data-i="1" min="0" max="100" step="1">
       </div>
       <div class="row">
-        <div class="top"><label for="sat">鮮やかさ</label><span class="val" id="v-sat"></span></div>
-        <input type="range" id="sat" min="0" max="100" step="1">
+        <div class="top"><label for="ink-l">明るさ</label><span class="val" id="v-ink-l"></span></div>
+        <input type="range" id="ink-l" data-c="ink" data-i="2" min="0" max="100" step="1">
+      </div>
+      <div class="sec hd"><span>背景の色</span><span class="val" id="v-paper"></span></div>
+      <div class="row">
+        <div class="top"><label for="paper-h">色相</label><span class="val" id="v-paper-h"></span></div>
+        <input type="range" id="paper-h" data-c="paper" data-i="0" min="0" max="359" step="1">
       </div>
       <div class="row">
-        <div class="top"><label for="lit">明るさ</label><span class="val" id="v-lit"></span></div>
-        <input type="range" id="lit" min="0" max="100" step="1">
+        <div class="top"><label for="paper-s">鮮やかさ</label><span class="val" id="v-paper-s"></span></div>
+        <input type="range" id="paper-s" data-c="paper" data-i="1" min="0" max="100" step="1">
+      </div>
+      <div class="row">
+        <div class="top"><label for="paper-l">明るさ</label><span class="val" id="v-paper-l"></span></div>
+        <input type="range" id="paper-l" data-c="paper" data-i="2" min="0" max="100" step="1">
       </div>
       <button class="btn wide" id="swapColors" type="button">色を反転</button>
       <div class="row">
@@ -351,7 +357,7 @@ const S = {
   cal: { show: true, x: .5, y: .74, size: 1, year: now.getFullYear(), month: now.getMonth(),
          style: 'grid', weekStart: 0, lang: 'ja', font: 'DotGothic16', frame: true, bg: true },
   color: { ink: '#000000', paper: '#ffffff' },
-  hsl: { ink: [0, 0, 0], paper: [0, 0, 100] }, colorTarget: 'ink',
+  hsl: { ink: [0, 0, 0], paper: [0, 0, 100] },
   guide: false, snap: true, sound: true,
   calBox: null
 };
@@ -646,12 +652,11 @@ function syncUI() {
   $('#calFont').value = S.cal.font; $('#calFrame').checked = S.cal.frame; $('#calBg').checked = S.cal.bg;
   $('#guide').setAttribute('aria-pressed', String(S.guide)); $('#snap').setAttribute('aria-pressed', String(S.snap));
   $('#sound').setAttribute('aria-pressed', String(S.sound));
-  const hsl = S.hsl[S.colorTarget];
-  $('#hue').value = hsl[0]; $('#v-hue').textContent = hsl[0];
-  $('#sat').value = hsl[1]; $('#v-sat').textContent = hsl[1];
-  $('#lit').value = hsl[2]; $('#v-lit').textContent = hsl[2];
+  ['ink', 'paper'].forEach(c => {
+    $('#v-' + c).textContent = S.color[c].toUpperCase();
+    'hsl'.split('').forEach((k, i) => { $(`#${c}-${k}`).value = S.hsl[c][i]; $(`#v-${c}-${k}`).textContent = S.hsl[c][i]; });
+  });
   document.querySelectorAll('.sw').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.ink === S.color.ink && b.dataset.paper === S.color.paper)));
-  document.querySelectorAll('#colorTarget button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.c === S.colorTarget)));
   $('#size').value = S.W + 'x' + S.H;
   applyTheme();
 }
@@ -692,12 +697,11 @@ function setColors(ink, paper) {
   S.color.ink = ink; S.color.paper = paper;
   S.hsl = { ink: toHSL(ink), paper: toHSL(paper) };
 }
-['#hue', '#sat', '#lit'].forEach((id, i) => bindInput(id, t => {
-  const c = S.colorTarget, hsl = S.hsl[c];
-  hsl[i] = +t.value;
+document.querySelectorAll('input[data-c]').forEach(el => bindInput('#' + el.id, t => {
+  const c = t.dataset.c, hsl = S.hsl[c];
+  hsl[+t.dataset.i] = +t.value;
   S.color[c] = toHex(hsl2rgb(hsl[0], hsl[1], hsl[2]));
 }));
-document.querySelectorAll('#colorTarget button').forEach(b => b.addEventListener('click', () => { S.colorTarget = b.dataset.c; syncUI(); }));
 
 function shiftMonth(delta) {
   const d = new Date(S.cal.year, S.cal.month + delta, 1);
