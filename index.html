@@ -90,11 +90,13 @@ button:focus-visible,select:focus-visible,input:focus-visible{ outline:3px dashe
 
 .monthbar{ display:grid; grid-template-columns:48px 1fr 48px; gap:8px; align-items:center; }
 .monthbar .lbl{ text-align:center; font-size:17px; }
-.swatches{ display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
+.swatches{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
 .sw{
-  height:44px; border:2px solid var(--fg); border-radius:0; cursor:pointer; padding:0;
-  box-shadow:2px 2px 0 var(--fg);
+  font:inherit; font-size:13px; color:var(--fg); background:var(--panel);
+  min-height:44px; border:2px solid var(--fg); border-radius:0; cursor:pointer; padding:4px;
+  box-shadow:2px 2px 0 var(--fg); white-space:nowrap;
 }
+.sw[aria-pressed="true"]{ background:var(--fg); color:var(--on-fg); }
 .sw:active{ transform:translate(1px,1px); box-shadow:1px 1px 0 var(--fg); }
 .note{ margin:0; font-size:13px; color:var(--mute); }
 .sec{ display:block; border-bottom:2px solid var(--fg); padding-bottom:4px; margin-top:6px; }
@@ -634,6 +636,7 @@ function syncUI() {
   $('#hue').value = hsl[0]; $('#v-hue').textContent = hsl[0];
   $('#sat').value = hsl[1]; $('#v-sat').textContent = hsl[1];
   $('#lit').value = hsl[2]; $('#v-lit').textContent = hsl[2];
+  document.querySelectorAll('.sw').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.ink === S.color.ink && b.dataset.paper === S.color.paper)));
   document.querySelectorAll('#colorTarget button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.c === S.colorTarget)));
   $('#size').value = S.W + 'x' + S.H;
   applyTheme();
@@ -703,7 +706,7 @@ const sws = $('#swatches');
 PRESETS.forEach(([name, ink, paper]) => {
   const b = document.createElement('button');
   b.type = 'button'; b.className = 'sw'; b.title = name; b.setAttribute('aria-label', '配色: ' + name);
-  b.style.background = `linear-gradient(135deg, ${ink} 50%, ${paper} 50%)`;
+  b.textContent = (ink + '×' + paper).toUpperCase(); b.dataset.ink = ink; b.dataset.paper = paper;
   b.addEventListener('click', () => { setColors(ink, paper); syncUI(); schedule(); });
   sws.appendChild(b);
 });
