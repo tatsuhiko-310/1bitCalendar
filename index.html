@@ -16,6 +16,9 @@
 }
 html{ scroll-padding-top:env(safe-area-inset-top,0px); }
 *,*::before,*::after{ box-sizing:inherit; }
+/* タップ時のブラウザ標準のハイライト(半透明でゆっくり消える)を出さない */
+*{ -webkit-tap-highlight-color:transparent; }
+button,select,input,label{ touch-action:manipulation; }
 body{
   margin:0; background:var(--bg); color:var(--fg);
   font-family:"DotGothic16","Hiragino Sans","Yu Gothic",monospace;
