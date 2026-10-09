@@ -50,6 +50,7 @@ header h1{ margin:0; font-size:20px; font-weight:400; letter-spacing:.04em; }
 }
 .hint{ margin:0; padding:8px 12px; font-size:13px; color:var(--mute); border-bottom:2px solid var(--fg); }
 .snapbar{ padding:6px 12px; border-bottom:2px solid var(--fg); display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.snapbar .seg{ flex:1; }
 .stage .fsfab{ position:absolute; top:10px; right:10px; z-index:3; min-height:44px; padding:4px 12px; font-size:13px; white-space:nowrap; box-shadow:2px 2px 0 var(--fg); }
 #fs{ position:fixed; inset:0; z-index:60; background:#000; display:none; cursor:pointer; }
 #fs.open{ display:block; }
@@ -148,8 +149,10 @@ button:focus-visible,select:focus-visible,input:focus-visible{ outline:3px dashe
 
   <section class="panel">
     <p class="hint">カレンダーの上をドラッグするとカレンダー、それ以外は写真が動きます。2本指でも拡大できます。</p>
-    <div class="snapbar"><label class="check"><input type="checkbox" id="snap" checked>横軸の中央にスナップする</label></div>
-    <div class="snapbar"><label class="check"><input type="checkbox" id="snapEdge" checked>カレンダーと写真の辺をそろえる</label></div>
+    <div class="snapbar"><div class="seg">
+      <button type="button" id="guide" aria-pressed="false">ガイド</button>
+      <button type="button" id="snap" aria-pressed="true">スナップ</button>
+    </div></div>
     <div class="snapbar"><label class="check"><input type="checkbox" id="lockSim">ロック画面の時計を重ねて確認(保存画像には入りません)</label></div>
     <div class="tabs" role="tablist">
       <button role="tab" id="t-photo" aria-selected="true" aria-controls="pane-photo" data-tab="photo">写真</button>
@@ -330,7 +333,7 @@ const S = {
   cal: { show: true, x: .5, y: .74, size: 1, year: now.getFullYear(), month: now.getMonth(),
          style: 'grid', weekStart: 0, lang: 'ja', font: 'DotGothic16', frame: true, bg: true },
   color: { ink: '#000000', paper: '#ffffff' },
-  snap: true, snapEdge: true,
+  guide: false, snap: true,
   calBox: null
 };
 
@@ -567,26 +570,37 @@ function drawCal(guides) {
 }
 
 /* ---------- 描画 ---------- */
-let guidesOn = false, snapLine = false, snapG = { xs: [], ys: [] };
-function render(guides) {
+// preview=true のときだけガイド類を重ねる(保存・全画面は false)
+let dragging = false, snapG = { xs: [], ys: [] };
+function render(preview) {
   ctx.fillStyle = S.color.paper; ctx.fillRect(0, 0, S.W, S.H);
   renderPhoto();
-  if (S.cal.show) drawCal(guides && target === 'cal'); else { S.calBox = null; S.calRect = null; }
-  if (guides && snapLine) {
-    ctx.save(); ctx.strokeStyle = '#ff2d55'; ctx.lineWidth = Math.max(3, S.W / 300);
-    ctx.setLineDash([S.W / 60, S.W / 60]);
-    ctx.beginPath(); ctx.moveTo(S.W / 2, 0); ctx.lineTo(S.W / 2, S.H); ctx.stroke(); ctx.restore();
+  if (S.cal.show) drawCal(preview && dragging && target === 'cal'); else { S.calBox = null; S.calRect = null; }
+  if (!preview) return;
+  const line = (x1, y1, x2, y2) => { ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); };
+  const u = S.W / (cv.clientWidth || S.W); // 画面上の1pxに当たる出力px
+  ctx.save(); ctx.strokeStyle = '#ff2d55'; ctx.setLineDash([u * 6, u * 4]);
+  if (S.guide) {
+    ctx.lineWidth = u;
+    line(S.W / 2, 0, S.W / 2, S.H); line(0, S.H / 2, S.W, S.H / 2);
   }
-  if (guides && (snapG.xs.length || snapG.ys.length)) {
-    ctx.save(); ctx.strokeStyle = '#ff2d55'; ctx.lineWidth = Math.max(3, S.W / 300);
-    ctx.setLineDash([S.W / 60, S.W / 60]);
-    snapG.xs.forEach(x => { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, S.H); ctx.stroke(); });
-    snapG.ys.forEach(y => { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(S.W, y); ctx.stroke(); });
-    ctx.restore();
+  if (dragging) {
+    ctx.lineWidth = u * 2;
+    snapG.xs.forEach(x => line(x, 0, x, S.H));
+    snapG.ys.forEach(y => line(0, y, S.W, y));
   }
+  ctx.restore();
+}
+// 保存・全画面用の画像(ガイドなし)
+function finalImage() {
+  render(false);
+  const c = document.createElement('canvas'); c.width = S.W; c.height = S.H;
+  c.getContext('2d').drawImage(cv, 0, 0);
+  schedule();
+  return c;
 }
 let raf = 0;
-function schedule() { if (!raf) raf = requestAnimationFrame(() => { raf = 0; render(guidesOn); }); }
+function schedule() { if (!raf) raf = requestAnimationFrame(() => { raf = 0; render(true); }); }
 
 function fit() {
   const st = $('#stage').getBoundingClientRect();
@@ -610,7 +624,8 @@ function syncUI() {
   $('#monthLabel').textContent = S.cal.year + '年' + MONTH_JA(S.cal.month);
   $('#calStyle').value = S.cal.style; $('#calWeek').value = String(S.cal.weekStart); $('#calLang').value = S.cal.lang;
   $('#calSize').value = S.cal.size; $('#v-calSize').textContent = '×' + S.cal.size.toFixed(2);
-  $('#calFont').value = S.cal.font; $('#calFrame').checked = S.cal.frame; $('#calBg').checked = S.cal.bg; $('#snap').checked = S.snap; $('#snapEdge').checked = S.snapEdge;
+  $('#calFont').value = S.cal.font; $('#calFrame').checked = S.cal.frame; $('#calBg').checked = S.cal.bg;
+  $('#guide').setAttribute('aria-pressed', String(S.guide)); $('#snap').setAttribute('aria-pressed', String(S.snap));
   $('#ink').value = S.color.ink; $('#paper').value = S.color.paper;
   $('#size').value = S.W + 'x' + S.H;
   applyTheme();
@@ -638,8 +653,8 @@ bindInput('#calLang', t => S.cal.lang = t.value, 'change');
 bindInput('#calSize', t => S.cal.size = +t.value);
 bindInput('#calFrame', t => S.cal.frame = t.checked, 'change');
 bindInput('#calBg', t => S.cal.bg = t.checked, 'change');
-bindInput('#snap', t => S.snap = t.checked, 'change');
-bindInput('#snapEdge', t => S.snapEdge = t.checked, 'change');
+$('#guide').addEventListener('click', () => { S.guide = !S.guide; syncUI(); schedule(); });
+$('#snap').addEventListener('click', () => { S.snap = !S.snap; syncUI(); schedule(); });
 $('#calFont').addEventListener('change', async e => {
   S.cal.font = e.target.value; schedule();
   try { await document.fonts.load(`16px "${S.cal.font}"`, '0123456789年月日火水木金土SMTWFJANUARYBCDEGHILOPRV'); } catch (_) {}
@@ -729,7 +744,7 @@ cv.addEventListener('pointerdown', e => {
     const p = toCanvas(e); target = hitCal(p) ? 'cal' : 'photo';
     const o = target === 'cal' ? S.cal : S.photo;
     start = { px: p.x, py: p.y, ox: o.x, oy: o.y };
-    guidesOn = true; snapLine = false; cv.classList.add('dragging');
+    dragging = true; snapG = { xs: [], ys: [] }; cv.classList.add('dragging');
   } else if (ptrs.size === 2) {
     pinch = { d: dist(), s: getScale() }; start = null;
   }
@@ -742,18 +757,15 @@ cv.addEventListener('pointermove', e => {
   else if (ptrs.size === 1 && start) {
     const p = toCanvas(e), o = target === 'cal' ? S.cal : S.photo;
     o.x = start.ox + (p.x - start.px) / S.W; o.y = start.oy + (p.y - start.py) / S.H;
-    snapLine = false; snapG = { xs: [], ys: [] };
-    const thr = 14 * S.W / cv.getBoundingClientRect().width;
-    let xSnapped = false;
-    if (S.snap && Math.abs(o.x - .5) * S.W < thr) { o.x = .5; snapLine = true; xSnapped = true; }
-    if (S.snapEdge) edgeSnap(o, thr, xSnapped);
+    snapG = { xs: [], ys: [] };
+    if (S.snap) snapTo(o, 14 * S.W / cv.getBoundingClientRect().width);
     schedule();
   }
 });
 const endPtr = e => {
   ptrs.delete(e.pointerId);
   if (ptrs.size < 2) pinch = null;
-  if (ptrs.size === 0) { start = null; target = null; guidesOn = false; snapLine = false; snapG = { xs: [], ys: [] }; cv.classList.remove('dragging'); }
+  if (ptrs.size === 0) { start = null; target = null; dragging = false; snapG = { xs: [], ys: [] }; cv.classList.remove('dragging'); }
   else if (ptrs.size === 1) start = null;
   schedule();
 };
@@ -770,8 +782,8 @@ let dl = null;
 if (window.claude && typeof window.claude.use === 'function') {
   window.claude.use('downloads').then(x => { dl = x || null; }).catch(() => { dl = null; });
 }
-function showOverlay() {
-  $('#outImg').src = cv.toDataURL('image/png');
+function showOverlay(img) {
+  $('#outImg').src = img.toDataURL('image/png');
   $('#overlay').classList.add('open'); $('#closeOv').focus();
 }
 $('#closeOv').addEventListener('click', () => $('#overlay').classList.remove('open'));
@@ -785,17 +797,17 @@ function download(blob, name) {
   setTimeout(() => URL.revokeObjectURL(url), 60000);
 }
 $('#save').addEventListener('click', async () => {
-  guidesOn = false; render(false);
+  const img = finalImage();
   const name = `1bit-calendar-${S.cal.year}-${String(S.cal.month + 1).padStart(2, '0')}.png`;
   msg.textContent = '';
   try {
-    const blob = await new Promise(r => cv.toBlob(r, 'image/png'));
+    const blob = await new Promise(r => img.toBlob(r, 'image/png'));
     if (!blob) throw new Error('toBlob');
     if (dl) await dl.save({ filename: name, data: blob });
     else download(blob, name);
   } catch (err) {
     if (err && err.code === 'declined') msg.textContent = '保存をキャンセルしました。';
-    else showOverlay();
+    else showOverlay(img);
   }
 });
 
@@ -900,23 +912,25 @@ function photoRect() {
   const w = S.W * S.photo.scale, h = w * S.src.height / S.src.width;
   return { x: S.photo.x * S.W - w / 2, y: S.photo.y * S.H - h / 2, w, h };
 }
-function edgeSnap(o, thr, skipX) {
-  if (!S.calRect) return;
+// スナップ: 動かしている側の辺が、もう一方の4辺に吸着する。
+// ガイドONのときは、中央のガイド線にも辺・中心が吸着する。
+function snapTo(o, thr) {
   const isCal = target === 'cal';
-  const O = isCal ? photoRect() : S.calRect;
+  if (isCal && !S.calRect) return;
   const R = isCal
     ? { x: o.x * S.W - S.calRect.w / 2, y: o.y * S.H - S.calRect.h / 2, w: S.calRect.w, h: S.calRect.h }
     : photoRect();
-  const best = cands => {
+  const O = isCal ? photoRect() : S.calRect;
+  const axis = (lo, size, olo, osize, mid) => {
     let b = null;
-    cands.forEach(c => { if (Math.abs(c.d) < thr && (!b || Math.abs(c.d) < Math.abs(b.d))) b = c; });
+    const add = (at, p) => { const d = at - p; if (Math.abs(d) < thr && (!b || Math.abs(d) < Math.abs(b.d))) b = { d, at }; };
+    if (O) for (const at of [olo, olo + osize]) { add(at, lo); add(at, lo + size); }
+    if (S.guide) { add(mid, lo); add(mid, lo + size / 2); add(mid, lo + size); }
     return b;
   };
-  if (!skipX) {
-    const bx = best([{ d: O.x - R.x, at: O.x }, { d: O.x + O.w - (R.x + R.w), at: O.x + O.w }]);
-    if (bx) { o.x += bx.d / S.W; snapG.xs.push(bx.at); }
-  }
-  const by = best([{ d: O.y - R.y, at: O.y }, { d: O.y + O.h - (R.y + R.h), at: O.y + O.h }]);
+  const bx = axis(R.x, R.w, O && O.x, O && O.w, S.W / 2);
+  if (bx) { o.x += bx.d / S.W; snapG.xs.push(bx.at); }
+  const by = axis(R.y, R.h, O && O.y, O && O.h, S.H / 2);
   if (by) { o.y += by.d / S.H; snapG.ys.push(by.at); }
 }
 
@@ -1049,9 +1063,8 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') closeCrop();
 /* ---------- 全画面表示 ---------- */
 const fs = $('#fs'), fsCv = $('#fsCv');
 function openFs() {
-  guidesOn = false; snapLine = false; render(false);
   fsCv.width = S.W; fsCv.height = S.H;
-  fsCv.getContext('2d').drawImage(cv, 0, 0);
+  fsCv.getContext('2d').drawImage(finalImage(), 0, 0);
   fs.classList.add('open');
   placeFsLock();
   if (fs.requestFullscreen) fs.requestFullscreen().catch(() => {});
@@ -1066,7 +1079,7 @@ document.addEventListener('fullscreenchange', () => { if (!document.fullscreenEl
 
 /* ---------- 起動 ---------- */
 S.src = makeSample(); S.orig = S.src; S.crop = null;
-syncUI(); fit(); render(false);
+syncUI(); fit(); render(true);
 window.addEventListener('resize', fit);
 if (window.ResizeObserver) new ResizeObserver(fit).observe($('#stage'));
 if (document.fonts && document.fonts.load) {
