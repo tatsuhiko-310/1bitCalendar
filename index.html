@@ -109,11 +109,6 @@ button:focus-visible,select:focus-visible,input:focus-visible{ outline:3px dashe
 #cropCv{ display:block; touch-action:none; outline:2px solid var(--fg); background:var(--bg); }
 .cropbtns{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
 
-.lock{ position:absolute; display:none; pointer-events:none; overflow:hidden; color:var(--paper); font-family:"Hiragino Sans","Yu Gothic","Noto Sans JP",system-ui,sans-serif; }
-.lock.on{ display:block; }
-.lock .ph{ position:absolute; top:0; bottom:0; left:50%; width:calc(var(--u)*100); margin-left:calc(var(--u)*-50); }
-.lock .ph > *{ position:absolute; }
-.lk-time{ left:0; right:0; top:calc(var(--u)*69); text-align:center; font-family:"Dela Gothic One","Arial Black",system-ui,sans-serif; font-size:calc(var(--u)*20); line-height:1; transform:translateY(-50%) scaleY(2.2); white-space:nowrap; letter-spacing:calc(var(--u)*-.5); }
 #msg{ min-height:1.5em; font-size:13px; margin:0; }
 
 #overlay{
@@ -149,7 +144,6 @@ button:focus-visible,select:focus-visible,input:focus-visible{ outline:3px dashe
       <button type="button" id="guide" aria-pressed="false">ガイド</button>
       <button type="button" id="snap" aria-pressed="true">スナップ</button>
     </div></div>
-    <div class="snapbar"><label class="check"><input type="checkbox" id="lockSim">ロック画面の時計を重ねて確認(保存画像には入りません)</label></div>
     <div class="tabs" role="tablist">
       <button role="tab" id="t-photo" aria-selected="true" aria-controls="pane-photo" data-tab="photo">写真</button>
       <button role="tab" id="t-cal" aria-selected="false" aria-controls="pane-cal" data-tab="cal">カレンダー</button>
@@ -605,7 +599,6 @@ function fit() {
   const k = Math.min(aw / S.W, ah / S.H);
   cv.style.width = Math.floor(S.W * k) + 'px';
   cv.style.height = Math.floor(S.H * k) + 'px';
-  placeLock();
 }
 
 /* ---------- UI の同期 ---------- */
@@ -854,50 +847,6 @@ function applyTheme() {
   st.setProperty('--ink', toHex(fg)); st.setProperty('--paper', toHex(bg));
 }
 
-/* ---------- ロック画面シミュレーション(プレビュー専用) ---------- */
-S.lockSim = false;
-function makeLock() {
-  const d = document.createElement('div');
-  d.className = 'lock'; d.setAttribute('aria-hidden', 'true');
-  d.innerHTML = `<div class="ph"><div class="lk-time"></div></div>`;
-  return d;
-}
-const stageLock = makeLock(), fsLock = makeLock();
-$('#stage').appendChild(stageLock);
-$('#fsCv').after(fsLock);
-function refreshLock() {
-  const d = new Date();
-  const time = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
-  [stageLock, fsLock].forEach(el => { el.querySelector('.lk-time').textContent = time; });
-}
-function placeBox(el, left, top, w, h) {
-  el.style.left = left + 'px'; el.style.top = top + 'px';
-  el.style.width = w + 'px'; el.style.height = h + 'px';
-  el.style.setProperty('--u', (Math.min(w, h * .4618) / 100) + 'px');
-}
-function placeLock() {
-  const sr = $('#stage').getBoundingClientRect(), r = cv.getBoundingClientRect();
-  placeBox(stageLock, r.left - sr.left + cv.clientLeft, r.top - sr.top + cv.clientTop, cv.clientWidth, cv.clientHeight);
-}
-function placeFsLock() {
-  const f = $('#fs'), fw = f.clientWidth, fh = f.clientHeight;
-  const k = Math.min(fw / S.W, fh / S.H), w = S.W * k, h = S.H * k;
-  placeBox(fsLock, (fw - w) / 2, (fh - h) / 2, w, h);
-}
-let lkTimer = 0;
-function updateLock() {
-  stageLock.classList.toggle('on', S.lockSim);
-  fsLock.classList.toggle('on', S.lockSim);
-  clearInterval(lkTimer);
-  if (S.lockSim) { refreshLock(); placeLock(); lkTimer = setInterval(refreshLock, 15000); }
-}
-$('#lockSim').addEventListener('change', e => { S.lockSim = e.target.checked; updateLock(); });
-window.addEventListener('resize', () => { if ($('#fs').classList.contains('open')) placeFsLock(); });
-document.addEventListener('fullscreenchange', () => {
-  setTimeout(() => { if ($('#fs').classList.contains('open')) placeFsLock(); }, 150);
-});
-refreshLock();
-
 /* ---------- 辺のスナップ(カレンダーと写真) ---------- */
 function clampCalPos(bw, bh, sh) {
   const loX = bw / 2 / S.W, hiX = 1 - (bw / 2 + sh) / S.W;
@@ -1068,7 +1017,6 @@ function openFs() {
   fsCv.width = S.W; fsCv.height = S.H;
   fsCv.getContext('2d').drawImage(finalImage(), 0, 0);
   fs.classList.add('open');
-  placeFsLock();
   if (fs.requestFullscreen) fs.requestFullscreen().catch(() => {});
 }
 function closeFs() {
