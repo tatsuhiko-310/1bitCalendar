@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>ドットカレンダー</title>
+<title>1bit Calendar</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Press+Start+2P&family=VT323&family=Space+Mono&family=Shippori+Mincho&family=Dela+Gothic+One&family=Yusei+Magic&display=swap" rel="stylesheet">
@@ -99,16 +99,11 @@ button:focus-visible,select:focus-visible,input:focus-visible{ outline:3px dashe
 }
 .sw:active{ transform:translate(1px,1px); box-shadow:1px 1px 0 var(--fg); }
 .note{ margin:0; font-size:13px; color:var(--mute); }
-.schemes{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:12px 0 6px; }
-.sch{ font:inherit; color:var(--fg); background:var(--panel); border:2px solid var(--fg); border-radius:0; padding:6px; cursor:pointer; display:grid; gap:4px; text-align:left; box-shadow:2px 2px 0 var(--fg); min-height:44px; }
-.sch:active{ transform:translate(1px,1px); box-shadow:1px 1px 0 var(--fg); }
-.schsw{ display:block; height:36px; border:2px solid var(--fg); }
 .sec{ display:block; border-bottom:2px solid var(--fg); padding-bottom:4px; margin-top:6px; }
 .seg{ display:grid; grid-template-columns:1fr 1fr; border:2px solid var(--fg); }
 .seg button{ font:inherit; color:var(--fg); background:var(--panel); border:0; min-height:40px; cursor:pointer; }
 .seg button + button{ border-left:2px solid var(--fg); }
 .seg button[aria-pressed="true"]{ background:var(--fg); color:var(--on-fg); }
-input[type=color]:disabled{ opacity:.45; cursor:not-allowed; }
 
 #crop{ position:fixed; inset:0; z-index:70; background:var(--bg); color:var(--fg); display:none; flex-direction:column; gap:10px; padding:calc(env(safe-area-inset-top,0px) + 10px) 10px calc(env(safe-area-inset-bottom,0px) + 10px); }
 #crop.open{ display:flex; }
@@ -121,19 +116,7 @@ input[type=color]:disabled{ opacity:.45; cursor:not-allowed; }
 .lock.on{ display:block; }
 .lock .ph{ position:absolute; top:0; bottom:0; left:50%; width:calc(var(--u)*100); margin-left:calc(var(--u)*-50); text-shadow:0 0 calc(var(--u)*1.5) rgba(0,0,0,.4); }
 .lock .ph > *{ position:absolute; }
-.lk-carrier{ left:calc(var(--u)*5.5); top:calc(var(--u)*5); transform:translateY(-50%); font-size:calc(var(--u)*3.6); white-space:nowrap; }
-.lk-sig{ right:calc(var(--u)*15); top:calc(var(--u)*5); transform:translateY(-50%); width:calc(var(--u)*4.6); height:calc(var(--u)*3.2); }
-.lk-bat{ right:calc(var(--u)*4.5); top:calc(var(--u)*5); transform:translateY(-50%); background:rgba(205,205,205,.85); color:#333; border-radius:calc(var(--u)*2); padding:0 calc(var(--u)*1.4); font-size:calc(var(--u)*3); line-height:calc(var(--u)*3.8); text-shadow:none; }
-.lk-lock{ left:50%; top:calc(var(--u)*14.8); width:calc(var(--u)*7.6); height:calc(var(--u)*7.6); transform:translate(-50%,-50%); border-radius:50%; background:rgba(120,120,120,.7); display:grid; place-items:center; }
-.lk-lock svg{ width:55%; height:55%; }
-.lk-date{ left:0; right:0; top:calc(var(--u)*42.5); transform:translateY(-50%); text-align:center; font-size:calc(var(--u)*7); white-space:nowrap; }
 .lk-time{ left:0; right:0; top:calc(var(--u)*69); text-align:center; font-family:"Dela Gothic One","Arial Black",system-ui,sans-serif; font-size:calc(var(--u)*20); line-height:1; transform:translateY(-50%) scaleY(2.2); white-space:nowrap; letter-spacing:calc(var(--u)*-.5); }
-.lk-btn{ bottom:calc(var(--u)*10); width:calc(var(--u)*10.8); height:calc(var(--u)*10.8); border-radius:50%; background:rgba(235,235,240,.88); display:grid; place-items:center; text-shadow:none; }
-.lk-btn svg{ width:52%; height:52%; }
-.lk-btn.l{ left:calc(var(--u)*6.8); }
-.lk-btn.r{ right:calc(var(--u)*6.8); }
-.lk-pill{ left:50%; margin-left:calc(var(--u)*-29.4); width:calc(var(--u)*58.8); height:calc(var(--u)*15.7); bottom:calc(var(--u)*7.6); border-radius:calc(var(--u)*8); background:linear-gradient(180deg,rgba(125,130,135,.78),rgba(70,75,80,.88)); display:flex; align-items:center; justify-content:center; gap:calc(var(--u)*2); font-size:calc(var(--u)*4.4); }
-.lk-pill svg{ width:calc(var(--u)*5); height:calc(var(--u)*5); }
 #msg{ min-height:1.5em; font-size:13px; margin:0; }
 
 #overlay{
@@ -295,7 +278,6 @@ input[type=color]:disabled{ opacity:.45; cursor:not-allowed; }
         </select>
       </div>
       <button class="btn primary wide" id="save" type="button">PNGで保存する</button>
-      <p class="note">保存できないときは、表示された画像を長押しして保存してください。</p>
       <p id="msg" role="status" aria-live="polite"></p>
     </div>
   </section>
@@ -347,7 +329,7 @@ const S = {
   dither: { algo: 'b4', px: 4, bright: 0, contrast: 0, invert: false },
   cal: { show: true, x: .5, y: .74, size: 1, year: now.getFullYear(), month: now.getMonth(),
          style: 'grid', weekStart: 0, lang: 'ja', font: 'DotGothic16', frame: true, bg: true },
-  color: { ink: '#000000', paper: '#ffffff', cal: '#000000', same: true },
+  color: { ink: '#000000', paper: '#ffffff' },
   snap: true, snapEdge: true,
   calBox: null
 };
@@ -458,110 +440,43 @@ const WE = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 const WL = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 const MONTHS = ['JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE','JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER'];
 
-function calMetrics() {
-  const c = S.cal, grid = c.style === 'grid';
-  const f = S.W * (grid ? .034 : .026) * c.size;
-  const days = new Date(c.year, c.month + 1, 0).getDate();
-  const first = new Date(c.year, c.month, 1).getDay();
-  const off = (first - c.weekStart + 7) % 7;
-  const pad = (c.frame || c.bg) ? f * .9 : 0;
-  const titleH = f * 2.5;
-  let w, h, cw = 0, ch, rows = 0;
-  if (grid) { cw = f * 2.1; ch = f * 1.7; rows = Math.ceil((off + days) / 7); w = cw * 7; h = titleH + ch * (rows + 1); }
-  else { ch = f * 1.35; w = f * 10.5; h = titleH + ch * days; }
-  const bw = w + 2 * pad, bh = h + 2 * pad;
-  clampCalPos(bw, bh, c.frame ? f * .3 : 0);
-  return { f, days, first, off, pad, w, h, cw, ch, rows, titleH, bw, bh, grid,
-           bx: c.x * S.W - bw / 2, by: c.y * S.H - bh / 2 };
-}
+// フォントごとの文字幅の補正
+const FK = { 'DotGothic16': 1, 'Press Start 2P': .6, 'VT323': 1.2, 'Space Mono': .9, 'Shippori Mincho': 1, 'Dela Gothic One': .8, 'Yusei Magic': 1 };
+// スタイルごとの基準文字サイズ(出力幅に対する比)
+const CAL_F = { grid: .034, list: .026, list2: .026, transpose: .03, bigmonth: .03, strip: .018, plain: .034 };
 
 function drawCal(guides) {
-  if (S.cal.style !== 'grid' && S.cal.style !== 'list') { drawCalAlt(guides); return; }
-  const c = S.cal, M = calMetrics(), f = M.f;
-  S.calBox = { x: M.bx, y: M.by, w: M.bw + f * .3, h: M.bh + f * .3 };
-  S.calRect = { x: M.bx, y: M.by, w: M.bw, h: M.bh };
-  const col = S.color.same ? S.color.ink : S.color.cal, paper = S.color.paper;
-  const ja = c.lang === 'ja';
-  const FK = { 'DotGothic16': 1, 'Press Start 2P': .6, 'VT323': 1.2, 'Space Mono': .9, 'Shippori Mincho': 1, 'Dela Gothic One': .8, 'Yusei Magic': 1 };
-  const cf = s => `${s * (FK[c.font] || 1)}px "${c.font}", ${FONT}`;
-  const rule = Math.max(2, Math.round(f * .1));
-  const sh = Math.round(f * .3), lwf = Math.max(2, Math.round(f * .09));
-  if (c.bg) { ctx.fillStyle = paper; ctx.fillRect(M.bx, M.by, M.bw, M.bh); }
-  if (c.frame) {
-    ctx.fillStyle = col;
-    ctx.fillRect(M.bx + M.bw, M.by + sh, sh, M.bh);
-    ctx.fillRect(M.bx + sh, M.by + M.bh, M.bw - sh, sh);
-    ctx.strokeStyle = col; ctx.lineWidth = lwf;
-    ctx.strokeRect(M.bx + lwf / 2, M.by + lwf / 2, M.bw - lwf, M.bh - lwf);
-  }
-  const ox = M.bx + M.pad, oy = M.by + M.pad;
-  ctx.fillStyle = col; ctx.textBaseline = 'middle';
-  ctx.textAlign = 'left';
-  ctx.font = cf(f * (M.grid ? 1.7 : 1.3));
-  ctx.fillText(ja ? (c.month + 1) + '月' : MONTHS[c.month], ox, oy + M.titleH * .42);
-  ctx.textAlign = 'right'; ctx.font = cf(f);
-  ctx.fillText(String(c.year), ox + M.w, oy + M.titleH * .5);
-  ctx.fillRect(ox, oy + M.titleH * .84, M.w, rule);
-
-  const gy = oy + M.titleH;
-  if (M.grid) {
-    ctx.textAlign = 'center'; ctx.font = cf(f * .95);
-    for (let i = 0; i < 7; i++) ctx.fillText((ja ? WJ : WE)[(i + c.weekStart) % 7], ox + M.cw * (i + .5), gy + M.ch * .5);
-    ctx.fillRect(ox, gy + M.ch * .98, M.w, Math.max(1, Math.round(rule / 2)));
-    ctx.font = cf(f * 1.15);
-    for (let d = 1; d <= M.days; d++) {
-      const idx = M.off + d - 1, cx = ox + M.cw * ((idx % 7) + .5), cy = gy + M.ch * (Math.floor(idx / 7) + 1.5);
-      ctx.fillText(String(d), cx, cy);
-    }
-  } else {
-    ctx.font = cf(f);
-    const dot = Math.max(2, Math.round(f * .1));
-    for (let d = 1; d <= M.days; d++) {
-      const cy = gy + M.ch * (d - .5), dow = (M.first + d - 1) % 7;
-      ctx.fillStyle = col;
-      for (let x = ox + f * 2.6; x < ox + M.w - f * 3.4; x += f * .4) ctx.fillRect(Math.round(x), Math.round(cy + f * .15), dot, dot);
-      ctx.textAlign = 'left'; ctx.fillText(String(d).padStart(2, '0'), ox + f * .4, cy);
-      ctx.textAlign = 'right'; ctx.fillText(ja ? WJ[dow] : WL[dow], ox + M.w - f * .4, cy);
-    }
-  }
-  if (guides) {
-    ctx.save(); ctx.strokeStyle = '#ff2d55'; ctx.lineWidth = Math.max(3, f * .1);
-    ctx.setLineDash([f * .35, f * .35]);
-    ctx.strokeRect(M.bx - f * .3, M.by - f * .3, M.bw + f * .9, M.bh + f * .9);
-    ctx.restore();
-  }
-}
-
-/* ---------- カレンダーの追加レイアウト ---------- */
-const FKS = { 'DotGothic16': 1, 'Press Start 2P': .6, 'VT323': 1.2, 'Space Mono': .9, 'Shippori Mincho': 1, 'Dela Gothic One': .8, 'Yusei Magic': 1 };
-function drawCalAlt(guides) {
   const c = S.cal, st = c.style, ja = c.lang === 'ja';
   const days = new Date(c.year, c.month + 1, 0).getDate();
   const first = new Date(c.year, c.month, 1).getDay();
   const off = (first - c.weekStart + 7) % 7;
-  const f = S.W * ({ list2: .026, transpose: .03, bigmonth: .03, strip: .018, plain: .034 }[st] || .03) * c.size;
-  const cf = s => `${s * (FKS[c.font] || 1)}px "${c.font}", ${FONT}`;
+  const f = S.W * (CAL_F[st] || .03) * c.size;
+  const cf = s => `${s * (FK[c.font] || 1)}px "${c.font}", ${FONT}`;
   const wk = i => (ja ? WJ : WE)[(i + c.weekStart) % 7];
-  const mLabel = ja ? (c.month + 1) + '月' : MONTHS[c.month];
-  const col = S.color.same ? S.color.ink : S.color.cal, paper = S.color.paper;
+  const col = S.color.ink, paper = S.color.paper;
   const pad = (c.frame || c.bg) ? f * .9 : 0;
   const rule = Math.max(2, Math.round(f * .1)), thin = Math.max(1, Math.round(rule / 2));
+  const dot = Math.max(2, Math.round(f * .1));
 
+  // 大きさ
   let w, h, cw, ch, rows, titleH = f * 2.5;
-  if (st === 'list2') { rows = Math.ceil(days / 2); ch = f * 1.35; cw = f * 8.2; w = cw * 2 + f * 1.6; h = titleH + ch * rows; }
+  if (st === 'grid') { cw = f * 2.1; ch = f * 1.7; rows = Math.ceil((off + days) / 7); w = cw * 7; h = titleH + ch * (rows + 1); }
+  else if (st === 'list') { ch = f * 1.35; w = f * 10.5; h = titleH + ch * days; }
+  else if (st === 'list2') { rows = Math.ceil(days / 2); ch = f * 1.35; cw = f * 8.2; w = cw * 2 + f * 1.6; h = titleH + ch * rows; }
   else if (st === 'transpose') { rows = Math.ceil((off + days) / 7); cw = f * 2; ch = f * 1.7; w = Math.max(f * 11, f * 2.4 + cw * rows); h = titleH + ch * 7; }
   else if (st === 'bigmonth') { titleH = f * 6.4; cw = f * 2.1; ch = f * 1.7; rows = Math.ceil((off + days) / 7); w = cw * 7; h = titleH + ch * (rows + 1); }
   else if (st === 'strip') { titleH = f * 2.6; cw = f * 1.55; ch = f * 1.7; w = cw * days; h = titleH + ch * 2; }
   else { cw = f * 2.1; ch = f * 1.7; rows = Math.ceil((off + days) / 7); w = cw * 7; h = ch * rows; }
 
-  const bw = w + 2 * pad, bh = h + 2 * pad;
+  // 位置・背景・枠
+  const bw = w + 2 * pad, bh = h + 2 * pad, sh = Math.round(f * .3);
   clampCalPos(bw, bh, c.frame ? f * .3 : 0);
   const bx = c.x * S.W - bw / 2, by = c.y * S.H - bh / 2;
   S.calBox = { x: bx, y: by, w: bw + f * .3, h: bh + f * .3 };
   S.calRect = { x: bx, y: by, w: bw, h: bh };
-  const sh = Math.round(f * .3), lwf = Math.max(2, Math.round(f * .09));
   if (c.bg) { ctx.fillStyle = paper; ctx.fillRect(bx, by, bw, bh); }
   if (c.frame) {
+    const lwf = Math.max(2, Math.round(f * .09));
     ctx.fillStyle = col;
     ctx.fillRect(bx + bw, by + sh, sh, bh);
     ctx.fillRect(bx + sh, by + bh, bw - sh, sh);
@@ -571,8 +486,9 @@ function drawCalAlt(guides) {
   const ox = bx + pad, oy = by + pad;
   ctx.fillStyle = col; ctx.textBaseline = 'middle';
 
+  // 部品
   const title = sz => {
-    ctx.textAlign = 'left'; ctx.font = cf(f * sz); ctx.fillText(mLabel, ox, oy + titleH * .42);
+    ctx.textAlign = 'left'; ctx.font = cf(f * sz); ctx.fillText(ja ? (c.month + 1) + '月' : MONTHS[c.month], ox, oy + titleH * .42);
     ctx.textAlign = 'right'; ctx.font = cf(f); ctx.fillText(String(c.year), ox + w, oy + titleH * .5);
     ctx.fillRect(ox, oy + titleH * .84, w, rule);
   };
@@ -590,17 +506,27 @@ function drawCalAlt(guides) {
       ctx.fillText(String(d), ox + cw * ((idx % 7) + .5), top + ch * (Math.floor(idx / 7) + .5));
     }
   };
+  // 日付・点線・曜日の1行(リスト系)。l/r は点線の左右の余白、inset は文字の余白
+  const listRow = (d, x0, rw, cy, l, r, inset) => {
+    const dow = (first + d - 1) % 7;
+    for (let x = x0 + f * l; x < x0 + rw - f * r; x += f * .4) ctx.fillRect(Math.round(x), Math.round(cy + f * .15), dot, dot);
+    ctx.textAlign = 'left'; ctx.fillText(String(d).padStart(2, '0'), x0 + f * inset, cy);
+    ctx.textAlign = 'right'; ctx.fillText(ja ? WJ[dow] : WL[dow], x0 + rw - f * inset, cy);
+  };
 
-  if (st === 'list2') {
+  if (st === 'grid') {
+    title(1.7);
+    gridAt(oy + titleH, true);
+  } else if (st === 'list') {
+    title(1.3);
+    ctx.font = cf(f);
+    for (let d = 1; d <= days; d++) listRow(d, ox, w, oy + titleH + ch * (d - .5), 2.6, 3.4, .4);
+  } else if (st === 'list2') {
     title(1.5);
     ctx.font = cf(f);
-    const dot = Math.max(2, Math.round(f * .1));
     for (let d = 1; d <= days; d++) {
-      const idx = d - 1, colI = idx >= rows ? 1 : 0, r = idx % rows;
-      const x0 = ox + colI * (cw + f * 1.6), cy = oy + titleH + ch * (r + .5), dow = (first + d - 1) % 7;
-      for (let x = x0 + f * 2.4; x < x0 + cw - f * 2.6; x += f * .4) ctx.fillRect(Math.round(x), Math.round(cy + f * .15), dot, dot);
-      ctx.textAlign = 'left'; ctx.fillText(String(d).padStart(2, '0'), x0 + f * .2, cy);
-      ctx.textAlign = 'right'; ctx.fillText(ja ? WJ[dow] : WL[dow], x0 + cw - f * .2, cy);
+      const idx = d - 1, colI = idx >= rows ? 1 : 0;
+      listRow(d, ox + colI * (cw + f * 1.6), cw, oy + titleH + ch * (idx % rows + .5), 2.4, 2.6, .2);
     }
   } else if (st === 'transpose') {
     title(1.5);
@@ -624,10 +550,7 @@ function drawCalAlt(guides) {
     title(1.7);
     const gy = oy + titleH;
     ctx.textAlign = 'center'; ctx.font = cf(f * .9);
-    for (let d = 1; d <= days; d++) {
-      const dow = (first + d - 1) % 7;
-      ctx.fillText(ja ? WJ[dow] : WE[dow], ox + cw * (d - .5), gy + ch * .5);
-    }
+    for (let d = 1; d <= days; d++) ctx.fillText((ja ? WJ : WE)[(first + d - 1) % 7], ox + cw * (d - .5), gy + ch * .5);
     ctx.fillRect(ox, gy + ch * .98, w, thin);
     ctx.font = cf(f);
     for (let d = 1; d <= days; d++) ctx.fillText(String(d), ox + cw * (d - .5), gy + ch * 1.5);
@@ -748,7 +671,7 @@ PRESETS.forEach(([name, ink, paper]) => {
   const b = document.createElement('button');
   b.type = 'button'; b.className = 'sw'; b.title = name; b.setAttribute('aria-label', '配色: ' + name);
   b.style.background = `linear-gradient(135deg, ${ink} 50%, ${paper} 50%)`;
-  b.addEventListener('click', () => { S.color.ink = ink; S.color.paper = paper; S.color.cal = ink; syncUI(); schedule(); });
+  b.addEventListener('click', () => { S.color.ink = ink; S.color.paper = paper; syncUI(); schedule(); });
   sws.appendChild(b);
 });
 
@@ -855,22 +778,28 @@ $('#closeOv').addEventListener('click', () => $('#overlay').classList.remove('op
 $('#overlay').addEventListener('click', e => { if (e.target.id === 'overlay') $('#overlay').classList.remove('open'); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') { $('#overlay').classList.remove('open'); $('#fs').classList.remove('open'); } });
 
+function download(blob, name) {
+  const url = URL.createObjectURL(blob), a = document.createElement('a');
+  a.href = url; a.download = name; a.rel = 'noopener';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+}
 $('#save').addEventListener('click', async () => {
   guidesOn = false; render(false);
-  const name = `dot-calendar-${S.cal.year}-${String(S.cal.month + 1).padStart(2, '0')}.png`;
-  if (!dl) { showOverlay(); msg.textContent = ''; return; }
+  const name = `1bit-calendar-${S.cal.year}-${String(S.cal.month + 1).padStart(2, '0')}.png`;
+  msg.textContent = '';
   try {
     const blob = await new Promise(r => cv.toBlob(r, 'image/png'));
-    if (!blob) throw { code: 'bad_request' };
-    await dl.save({ filename: name, data: blob });
-    msg.textContent = '保存しました。';
+    if (!blob) throw new Error('toBlob');
+    if (dl) await dl.save({ filename: name, data: blob });
+    else download(blob, name);
   } catch (err) {
     if (err && err.code === 'declined') msg.textContent = '保存をキャンセルしました。';
-    else { msg.textContent = ''; showOverlay(); }
+    else showOverlay();
   }
 });
 
-/* ---------- 配色の自動生成 ---------- */
+/* ---------- 色の計算 ---------- */
 function hsl2rgb(h, s, l) {
   h = ((h % 360) + 360) % 360; s /= 100; l /= 100;
   const k = n => (n + h / 30) % 12, a = s * Math.min(l, 1 - l);
@@ -894,22 +823,9 @@ const lum = rgb => {
   return .2126 * f(rgb[0]) + .7152 * f(rgb[1]) + .0722 * f(rgb[2]);
 };
 const ratio = (a, b) => { const x = lum(a), y = lum(b); return (Math.max(x, y) + .05) / (Math.min(x, y) + .05); };
-function partner(baseRGB, h, s, l, min) {
-  let rgb = hsl2rgb(h, s, l);
-  if (ratio(baseRGB, rgb) >= min) return rgb;
-  const up = lum(baseRGB) < .18;
-  let ll = l;
-  for (let i = 0; i < 60; i++) {
-    ll = clamp(ll + (up ? 2 : -2), 4, 97);
-    rgb = hsl2rgb(h, s, ll);
-    if (ratio(baseRGB, rgb) >= min || ll <= 4 || ll >= 97) break;
-  }
-  return rgb;
-}
 $('#swapColors').addEventListener('click', () => { const t = S.color.ink; S.color.ink = S.color.paper; S.color.paper = t; syncUI(); schedule(); });
 
 /* ---------- サイトの色をパレットに合わせる ---------- */
-let lastTheme = '';
 function applyTheme() {
   const bg = hex(S.color.paper), ink = hex(S.color.ink);
   const [h, s, l] = rgb2hsl(ink[0], ink[1], ink[2]);
@@ -922,26 +838,15 @@ function applyTheme() {
       if (ratio(fg, bg) >= 3 || ll <= 0 || ll >= 100) break;
     }
   }
-  const mix = (a, b, t) => a.map((v, i) => Math.round(v + (b[i] - v) * t));
-  const mute = fg, panel = bg;
   const st = document.documentElement.style;
   st.setProperty('--bg', toHex(bg)); st.setProperty('--fg', toHex(fg));
-  st.setProperty('--panel', toHex(panel)); st.setProperty('--mute', toHex(mute));
+  st.setProperty('--panel', toHex(bg)); st.setProperty('--mute', toHex(fg));
   st.setProperty('--on-fg', toHex(bg));
   st.setProperty('--ink', toHex(fg)); st.setProperty('--paper', toHex(bg));
-  const key = toHex(bg) + toHex(fg);
-  if (key !== lastTheme) { lastTheme = key; drawStrip(); }
 }
 
 /* ---------- ロック画面シミュレーション(プレビュー専用) ---------- */
 S.lockSim = false;
-const LK = {
-  sig: '<svg class="lk-sig" viewBox="0 0 20 14" fill="#fff"><rect x="0" y="9" width="3" height="5"/><rect x="5" y="6" width="3" height="8"/><rect x="10" y="3" width="3" height="11"/><rect x="15" y="0" width="3" height="14"/></svg>',
-  lock: '<svg viewBox="0 0 24 24" fill="#fff"><path d="M12 2a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1V7a5 5 0 0 0-5-5zm-3 8V7a3 3 0 0 1 6 0v3z"/></svg>',
-  home: '<svg viewBox="0 0 24 24" fill="#fff"><path d="M12 3 2 12h3v8h5v-5h4v5h5v-8h3z"/></svg>',
-  flash: '<svg viewBox="0 0 24 24" fill="#222"><path d="M8 2h8v3l-2 3v14a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1V8L8 5z"/></svg>',
-  dolby: '<svg viewBox="0 0 28 24" fill="#222"><path d="M2 5h5a7 7 0 0 1 0 14H2zM26 5h-5a7 7 0 0 0 0 14h5z"/></svg>'
-};
 function makeLock() {
   const d = document.createElement('div');
   d.className = 'lock'; d.setAttribute('aria-hidden', 'true');
@@ -1159,25 +1064,11 @@ $('#fsOpen').addEventListener('click', openFs);
 fs.addEventListener('click', closeFs);
 document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement) fs.classList.remove('open'); });
 
-/* ---------- ヘッダーのドット帯 ---------- */
-function drawStrip() {
-  const c = $('#strip'); if (!c) return;
-  const g = c.getContext('2d'), u = 3;
-  c.width = Math.ceil(window.innerWidth / u) + 2; c.height = 5;
-  c.style.width = c.width * u + 'px'; c.style.height = c.height * u + 'px';
-  const m = MAT.b8; g.fillStyle = getComputedStyle(document.body).color;
-  for (let y = 0; y < c.height; y++) for (let x = 0; x < c.width; x++) {
-    const v = 255 * (x / c.width);
-    if (v <= (m[y % 8][x % 8] + .5) / 64 * 255) g.fillRect(x, y, 1, 1);
-  }
-}
-
 /* ---------- 起動 ---------- */
 S.src = makeSample(); S.orig = S.src; S.crop = null;
-syncUI(); fit(); drawStrip(); render(false);
-window.addEventListener('resize', () => { fit(); drawStrip(); });
+syncUI(); fit(); render(false);
+window.addEventListener('resize', fit);
 if (window.ResizeObserver) new ResizeObserver(fit).observe($('#stage'));
-window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', drawStrip);
 if (document.fonts && document.fonts.load) {
   document.fonts.load(`16px "DotGothic16"`, '0123456789年月日火水木金土SMTWFJANUARYBCDEGHILOPRV').then(() => schedule()).catch(() => {});
   document.fonts.ready.then(() => schedule());
