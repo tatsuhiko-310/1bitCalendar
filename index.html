@@ -27,7 +27,8 @@ body{
 }
 
 header{ height:44px; display:flex; align-items:center; justify-content:space-between; gap:10px; padding:0 14px; }
-header .btn{ min-height:32px; padding:2px 10px; font-size:13px; box-shadow:2px 2px 0 var(--fg); }
+#resetColors{ min-height:32px; padding:2px 10px; font-size:13px; background:var(--alert); color:var(--paper); border-color:var(--alert); box-shadow:none; }
+#resetColors[hidden]{ display:none; }
 header h1{ margin:0; font-size:20px; font-weight:400; letter-spacing:.04em; }
 .app{ display:block; }
 .stage{
@@ -141,7 +142,7 @@ button:focus-visible,select:focus-visible,input:focus-visible{ outline:3px dashe
 </style>
 </head>
 <body>
-<header><h1>1bit Calendar</h1><button class="btn" id="resetColors" type="button">リセット</button></header>
+<header><h1>1bit Calendar</h1><button class="btn" id="resetColors" type="button" hidden>リセット</button></header>
 
 <main class="app">
   <section class="stage" id="stage" aria-label="プレビュー">
@@ -874,18 +875,29 @@ function rgb2hsl(r, g, b) {
   }
   return [h, s * 100, l * 100];
 }
+const lum = rgb => {
+  const f = v => { v /= 255; return v <= .03928 ? v / 12.92 : Math.pow((v + .055) / 1.055, 2.4); };
+  return .2126 * f(rgb[0]) + .7152 * f(rgb[1]) + .0722 * f(rgb[2]);
+};
+const contrast = (a, b) => { const x = lum(a), y = lum(b); return (Math.max(x, y) + .05) / (Math.min(x, y) + .05); };
 const toHex = rgb => '#' + rgb.map(v => v.toString(16).padStart(2, '0')).join('');
 $('#resetColors').addEventListener('click', () => { setColors('#000000', '#ffffff'); syncUI(); schedule(); });
 $('#swapColors').addEventListener('click', () => { const h = S.hsl; setColors(S.color.paper, S.color.ink); S.hsl = { ink: h.paper, paper: h.ink }; syncUI(); schedule(); });
 
 /* ---------- サイトの色をパレットに合わせる ---------- */
-// UIも選んだ2色をそのまま使う(読みにくい配色でも補正しない。戻すときはヘッダーのリセット)
+// UIも選んだ2色をそのまま使う(読みにくい配色でも補正しない)
 function applyTheme() {
   const ink = S.color.ink, paper = S.color.paper, st = document.documentElement.style;
   st.setProperty('--bg', paper); st.setProperty('--fg', ink);
   st.setProperty('--panel', paper); st.setProperty('--mute', ink);
   st.setProperty('--on-fg', paper);
   st.setProperty('--ink', ink); st.setProperty('--paper', paper);
+  // 2色が近くて見にくいときだけリセットを出す。色は背景の色を反転した色
+  // (中間の明るさで反転するとほぼ同じ色になるときだけ、白か黒の見やすい方)
+  const p = hex(paper), inv = p.map(v => 255 - v);
+  const alert = contrast(inv, p) >= 1.5 ? inv : contrast([0, 0, 0], p) > contrast([255, 255, 255], p) ? [0, 0, 0] : [255, 255, 255];
+  st.setProperty('--alert', toHex(alert));
+  $('#resetColors').hidden = contrast(hex(ink), p) >= 2;
 }
 
 /* ---------- 辺のスナップ(カレンダーと写真) ---------- */
