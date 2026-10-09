@@ -9,15 +9,11 @@
 <link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Press+Start+2P&family=VT323&family=Space+Mono&family=Shippori+Mincho&family=Dela+Gothic+One&family=Yusei+Magic&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#E9ECF1; --fg:#12151B; --panel:#F8F9FB; --mute:#5B6270; --on-fg:#F8F9FB; --ink:#12151B; --paper:#E9ECF1;
+  --bg:#ffffff; --fg:#000000; --panel:#ffffff; --mute:#000000; --on-fg:#ffffff; --ink:#000000; --paper:#ffffff;
   box-sizing:border-box;
   padding-top:env(safe-area-inset-top,0px);
   padding-bottom:env(safe-area-inset-bottom,0px);
 }
-@media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]){ --bg:#101217; --fg:#E8EBF1; --panel:#1A1D25; --mute:#98A0AF; --on-fg:#101217; }
-}
-:root[data-theme="dark"]{ --bg:#101217; --fg:#E8EBF1; --panel:#1A1D25; --mute:#98A0AF; --on-fg:#101217; }
 html{ scroll-padding-top:env(safe-area-inset-top,0px); }
 *,*::before,*::after{ box-sizing:inherit; }
 body{
@@ -39,7 +35,7 @@ header h1{ margin:0; font-size:20px; font-weight:400; letter-spacing:.04em; }
 #cv{
   display:block; touch-action:none; cursor:grab;
   border:2px solid var(--fg); box-shadow:4px 4px 0 var(--fg);
-  background:#fff;
+  background:var(--bg);
 }
 #cv.dragging{ cursor:grabbing; }
 
@@ -52,10 +48,10 @@ header h1{ margin:0; font-size:20px; font-weight:400; letter-spacing:.04em; }
 .snapbar{ padding:6px 12px; border-bottom:2px solid var(--fg); display:flex; align-items:center; justify-content:space-between; gap:10px; }
 .snapbar .seg{ flex:1; }
 .stage .fsfab{ position:absolute; top:10px; right:10px; z-index:3; min-height:44px; padding:4px 12px; font-size:13px; white-space:nowrap; box-shadow:2px 2px 0 var(--fg); }
-#fs{ position:fixed; inset:0; z-index:60; background:#000; display:none; cursor:pointer; }
+#fs{ position:fixed; inset:0; z-index:60; background:var(--bg); display:none; cursor:pointer; }
 #fs.open{ display:block; }
 #fsCv{ width:100%; height:100%; object-fit:contain; display:block; }
-#fsClose{ position:absolute; top:calc(env(safe-area-inset-top,0px) + 10px); right:10px; background:rgba(0,0,0,.6); color:#fff; border:2px solid #fff; box-shadow:none; }
+#fsClose{ position:absolute; top:calc(env(safe-area-inset-top,0px) + 10px); right:10px; }
 .tabs{ display:grid; grid-template-columns:repeat(4,1fr); border-bottom:2px solid var(--fg); }
 .tabs button{
   font:inherit; color:var(--fg); background:transparent; border:0; border-right:2px solid var(--fg);
@@ -110,18 +106,18 @@ button:focus-visible,select:focus-visible,input:focus-visible{ outline:3px dashe
 #crop.open{ display:flex; }
 #cropAsp{ grid-template-columns:repeat(5,1fr); }
 .cropstage{ flex:1; min-height:0; display:flex; align-items:center; justify-content:center; }
-#cropCv{ display:block; touch-action:none; outline:2px solid var(--fg); background:#777; }
+#cropCv{ display:block; touch-action:none; outline:2px solid var(--fg); background:var(--bg); }
 .cropbtns{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
 
-.lock{ position:absolute; display:none; pointer-events:none; overflow:hidden; color:#fff; font-family:"Hiragino Sans","Yu Gothic","Noto Sans JP",system-ui,sans-serif; }
+.lock{ position:absolute; display:none; pointer-events:none; overflow:hidden; color:var(--paper); font-family:"Hiragino Sans","Yu Gothic","Noto Sans JP",system-ui,sans-serif; }
 .lock.on{ display:block; }
-.lock .ph{ position:absolute; top:0; bottom:0; left:50%; width:calc(var(--u)*100); margin-left:calc(var(--u)*-50); text-shadow:0 0 calc(var(--u)*1.5) rgba(0,0,0,.4); }
+.lock .ph{ position:absolute; top:0; bottom:0; left:50%; width:calc(var(--u)*100); margin-left:calc(var(--u)*-50); }
 .lock .ph > *{ position:absolute; }
 .lk-time{ left:0; right:0; top:calc(var(--u)*69); text-align:center; font-family:"Dela Gothic One","Arial Black",system-ui,sans-serif; font-size:calc(var(--u)*20); line-height:1; transform:translateY(-50%) scaleY(2.2); white-space:nowrap; letter-spacing:calc(var(--u)*-.5); }
 #msg{ min-height:1.5em; font-size:13px; margin:0; }
 
 #overlay{
-  position:fixed; inset:0; z-index:50; background:rgba(0,0,0,.72);
+  position:fixed; inset:0; z-index:50; background:var(--bg);
   display:none; align-items:center; justify-content:center; padding:16px; overflow:auto;
 }
 #overlay.open{ display:flex; }
@@ -387,6 +383,14 @@ function makeSample() {
   return c;
 }
 
+/* ---------- 2色の点線(ドットの色と背景の色が交互) ---------- */
+function dashLine(g, lw, dash, path) {
+  g.save(); g.lineWidth = lw;
+  g.setLineDash([]); g.strokeStyle = S.color.paper; path(); g.stroke();
+  g.setLineDash(dash); g.strokeStyle = S.color.ink; path(); g.stroke();
+  g.restore();
+}
+
 /* ---------- 写真のディザ ---------- */
 function renderPhoto() {
   const px = S.dither.px, lw = Math.ceil(S.W / px), lh = Math.ceil(S.H / px);
@@ -562,10 +566,8 @@ function drawCal(guides) {
   }
 
   if (guides) {
-    ctx.save(); ctx.strokeStyle = '#ff2d55'; ctx.lineWidth = Math.max(3, f * .1);
-    ctx.setLineDash([Math.max(6, f * .35), Math.max(6, f * .35)]);
-    ctx.strokeRect(bx - f * .3, by - f * .3, bw + f * .9, bh + f * .9);
-    ctx.restore();
+    const dl = Math.max(6, f * .35);
+    dashLine(ctx, Math.max(3, f * .1), [dl, dl], () => { ctx.beginPath(); ctx.rect(bx - f * .3, by - f * .3, bw + f * .9, bh + f * .9); });
   }
 }
 
@@ -577,19 +579,14 @@ function render(preview) {
   renderPhoto();
   if (S.cal.show) drawCal(preview && dragging && target === 'cal'); else { S.calBox = null; S.calRect = null; }
   if (!preview) return;
-  const line = (x1, y1, x2, y2) => { ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); };
   const u = S.W / (cv.clientWidth || S.W); // 画面上の1pxに当たる出力px
-  ctx.save(); ctx.strokeStyle = '#ff2d55'; ctx.setLineDash([u * 6, u * 4]);
-  if (S.guide) {
-    ctx.lineWidth = u;
-    line(S.W / 2, 0, S.W / 2, S.H); line(0, S.H / 2, S.W, S.H / 2);
-  }
-  if (dragging) {
-    ctx.lineWidth = u * 2;
-    snapG.xs.forEach(x => line(x, 0, x, S.H));
-    snapG.ys.forEach(y => line(0, y, S.W, y));
-  }
-  ctx.restore();
+  const lines = (xs, ys, lw) => dashLine(ctx, lw, [u * 6, u * 4], () => {
+    ctx.beginPath();
+    xs.forEach(x => { ctx.moveTo(x, 0); ctx.lineTo(x, S.H); });
+    ys.forEach(y => { ctx.moveTo(0, y); ctx.lineTo(S.W, y); });
+  });
+  if (S.guide) lines([S.W / 2], [S.H / 2], u);
+  if (dragging && (snapG.xs.length || snapG.ys.length)) lines(snapG.xs, snapG.ys, u * 2);
 }
 // 保存・全画面用の画像(ガイドなし)
 function finalImage() {
@@ -976,19 +973,24 @@ function drawCrop() {
   cctx.clearRect(0, 0, cw, ch);
   cctx.drawImage(S.orig, 0, 0, cw, ch);
   const x = r.x * k, y = r.y * k, w = r.w * k, h = r.h * k;
-  cctx.fillStyle = 'rgba(0,0,0,.55)';
+  // 枠の外は背景の色の網点で覆う(半透明は使わない)
+  const pc = document.createElement('canvas'); pc.width = pc.height = 2;
+  const pg = pc.getContext('2d'); pg.fillStyle = S.color.paper; pg.fillRect(0, 0, 1, 1); pg.fillRect(1, 1, 1, 1);
+  const pat = cctx.createPattern(pc, 'repeat'); pat.setTransform(new DOMMatrix().scale(1 / crop.dpr));
+  cctx.fillStyle = pat;
   cctx.fillRect(0, 0, cw, y); cctx.fillRect(0, y + h, cw, ch - y - h);
   cctx.fillRect(0, y, x, h); cctx.fillRect(x + w, y, cw - x - w, h);
-  cctx.strokeStyle = '#fff'; cctx.lineWidth = 2; cctx.strokeRect(x, y, w, h);
-  cctx.lineWidth = 1; cctx.globalAlpha = .55;
-  for (let i = 1; i < 3; i++) {
-    cctx.beginPath(); cctx.moveTo(x + w * i / 3, y); cctx.lineTo(x + w * i / 3, y + h); cctx.stroke();
-    cctx.beginPath(); cctx.moveTo(x, y + h * i / 3); cctx.lineTo(x + w, y + h * i / 3); cctx.stroke();
-  }
-  cctx.globalAlpha = 1;
+  dashLine(cctx, 1, [4, 4], () => {
+    cctx.beginPath();
+    for (let i = 1; i < 3; i++) {
+      cctx.moveTo(x + w * i / 3, y); cctx.lineTo(x + w * i / 3, y + h);
+      cctx.moveTo(x, y + h * i / 3); cctx.lineTo(x + w, y + h * i / 3);
+    }
+  });
+  dashLine(cctx, 2, [6, 6], () => { cctx.beginPath(); cctx.rect(x, y, w, h); });
   cropHandles().forEach(p => {
-    cctx.fillStyle = '#fff'; cctx.fillRect(p[1] - 7, p[2] - 7, 14, 14);
-    cctx.strokeStyle = '#000'; cctx.lineWidth = 1; cctx.strokeRect(p[1] - 7, p[2] - 7, 14, 14);
+    cctx.fillStyle = S.color.paper; cctx.fillRect(p[1] - 7, p[2] - 7, 14, 14);
+    cctx.strokeStyle = S.color.ink; cctx.lineWidth = 2; cctx.strokeRect(p[1] - 6, p[2] - 6, 12, 12);
   });
 }
 function openCrop() {
