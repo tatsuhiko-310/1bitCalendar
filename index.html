@@ -130,7 +130,9 @@ button:focus-visible,select:focus-visible,input:focus-visible{ outline:3px dashe
 .seg button{ font:inherit; color:var(--fg); background:var(--panel); border:0; min-height:40px; cursor:pointer; }
 .seg button + button{ border-left:2px solid var(--fg); }
 .seg button[aria-pressed="true"]{ background:var(--fg); color:var(--on-fg); }
-.sec.hd{ display:flex; justify-content:space-between; align-items:baseline; }
+.sec.hd{ display:flex; justify-content:space-between; align-items:center; }
+.hex{ font:inherit; font-size:14px; width:7.5em; min-height:36px; padding:2px 8px; text-align:right; text-transform:uppercase;
+  color:var(--fg); background:var(--panel); border:2px solid var(--fg); border-radius:0; }
 
 #crop{ position:fixed; inset:0; z-index:70; background:var(--bg); color:var(--fg); display:none; flex-direction:column; gap:10px; padding:calc(env(safe-area-inset-top,0px) + 10px) 10px calc(env(safe-area-inset-bottom,0px) + 10px); }
 #crop.open{ display:flex; }
@@ -297,7 +299,7 @@ button:focus-visible,select:focus-visible,input:focus-visible{ outline:3px dashe
     <div class="pane" id="pane-color" role="tabpanel" aria-labelledby="t-color" hidden>
       <div class="swatches" id="swatches"></div>
       <button class="btn wide" id="swapColors" type="button">ドットと背景を入れ替え</button>
-      <div class="sec hd"><span>ドットの色</span><span class="val" id="v-ink"></span></div>
+      <div class="sec hd"><label for="hex-ink">ドットの色</label><input class="hex" id="hex-ink" data-hex="ink" type="text" maxlength="7" inputmode="text" autocomplete="off" autocapitalize="characters" spellcheck="false"></div>
       <div class="row">
         <div class="top"><label for="ink-h">色相</label><span class="val" id="v-ink-h"></span></div>
         <input type="range" id="ink-h" data-c="ink" data-i="0" min="0" max="359" step="1">
@@ -310,7 +312,7 @@ button:focus-visible,select:focus-visible,input:focus-visible{ outline:3px dashe
         <div class="top"><label for="ink-l">明るさ</label><span class="val" id="v-ink-l"></span></div>
         <input type="range" id="ink-l" data-c="ink" data-i="2" min="0" max="100" step="1">
       </div>
-      <div class="sec hd"><span>背景の色</span><span class="val" id="v-paper"></span></div>
+      <div class="sec hd"><label for="hex-paper">背景の色</label><input class="hex" id="hex-paper" data-hex="paper" type="text" maxlength="7" inputmode="text" autocomplete="off" autocapitalize="characters" spellcheck="false"></div>
       <div class="row">
         <div class="top"><label for="paper-h">色相</label><span class="val" id="v-paper-h"></span></div>
         <input type="range" id="paper-h" data-c="paper" data-i="0" min="0" max="359" step="1">
@@ -672,7 +674,7 @@ function syncUI() {
   $('#guide').setAttribute('aria-pressed', String(S.guide)); $('#snap').setAttribute('aria-pressed', String(S.snap));
   $('#sound').setAttribute('aria-pressed', String(S.sound));
   ['ink', 'paper'].forEach(c => {
-    $('#v-' + c).textContent = S.color[c].toUpperCase();
+    const hx = $('#hex-' + c); if (document.activeElement !== hx) hx.value = S.color[c].toUpperCase();
     'hsl'.split('').forEach((k, i) => { $(`#${c}-${k}`).value = S.hsl[c][i]; $(`#v-${c}-${k}`).textContent = S.hsl[c][i]; });
     // 色が出ない組み合わせ(灰色・真っ黒・真っ白)では、効かないスライダーを点線にする
     const [, sat, lit] = S.hsl[c], flat = lit === 0 || lit === 100;
@@ -721,6 +723,24 @@ function setColors(ink, paper) {
   S.color.ink = ink; S.color.paper = paper;
   S.hsl = { ink: toHSL(ink), paper: toHSL(paper) };
 }
+// カラーコードの直接入力(#RRGGBB / #RGB、# は省略可)。正しい形になった時点で反映し、確定時に整える
+const parseHex = v => {
+  const m = v.trim().replace(/^#/, '').toLowerCase();
+  if (/^[0-9a-f]{6}$/.test(m)) return '#' + m;
+  if (/^[0-9a-f]{3}$/.test(m)) return '#' + [...m].map(x => x + x).join('');
+  return null;
+};
+document.querySelectorAll('input[data-hex]').forEach(el => {
+  const c = el.dataset.hex;
+  const apply = full => {
+    const h = parseHex(el.value);
+    if (!h || (!full && el.value.replace('#', '').length < 6)) return false;
+    S.color[c] = h; S.hsl[c] = toHSL(h); syncUI(); schedule(); return true;
+  };
+  el.addEventListener('input', () => apply(false));
+  el.addEventListener('change', () => { apply(true); el.value = S.color[c].toUpperCase(); });
+  el.addEventListener('keydown', e => { if (e.key === 'Enter') el.blur(); });
+});
 document.querySelectorAll('input[data-c]').forEach(el => bindInput('#' + el.id, t => {
   const c = t.dataset.c, hsl = S.hsl[c];
   hsl[+t.dataset.i] = +t.value;
