@@ -26,9 +26,16 @@ body{
   -webkit-text-size-adjust:100%;
 }
 
-header{ height:44px; display:flex; align-items:center; justify-content:space-between; gap:10px; padding:0 14px; }
-#resetColors{ min-height:32px; padding:2px 10px; font-size:13px; background:var(--alert); color:var(--paper); border-color:var(--alert); box-shadow:none; }
-#resetColors[hidden]{ display:none; }
+header{ height:44px; display:flex; align-items:center; padding:0 14px; }
+/* 2色が近くて見にくいときだけ、画面右上に上からスライドインする */
+#resetColors{
+  position:fixed; z-index:40; right:10px; top:calc(env(safe-area-inset-top,0px) + 8px);
+  min-height:36px; padding:2px 12px; font-size:13px;
+  background:var(--alert); color:var(--paper); border-color:var(--alert); box-shadow:none;
+  transform:translateY(calc(-100% - 20px - env(safe-area-inset-top,0px))); visibility:hidden;
+  transition:transform .2s ease-out, visibility 0s .2s;
+}
+#resetColors.show{ transform:none; visibility:visible; transition:transform .2s ease-out; }
 header h1{ margin:0; font-size:20px; font-weight:400; letter-spacing:.04em; }
 .app{ display:block; }
 .stage{
@@ -156,7 +163,8 @@ button:focus-visible,select:focus-visible,input:focus-visible{ outline:3px dashe
 </style>
 </head>
 <body>
-<header><h1>1bit Calendar</h1><button class="btn" id="resetColors" type="button" hidden>COLOR RESET</button></header>
+<header><h1>1bit Calendar</h1></header>
+<button class="btn" id="resetColors" type="button">COLOR RESET</button>
 
 <main class="app">
   <section class="stage" id="stage" aria-label="プレビュー">
@@ -921,7 +929,7 @@ function applyTheme() {
   const p = hex(paper), inv = p.map(v => 255 - v);
   const alert = contrast(inv, p) >= 1.5 ? inv : contrast([0, 0, 0], p) > contrast([255, 255, 255], p) ? [0, 0, 0] : [255, 255, 255];
   st.setProperty('--alert', toHex(alert));
-  $('#resetColors').hidden = contrast(hex(ink), p) >= 2;
+  $('#resetColors').classList.toggle('show', contrast(hex(ink), p) < 2);
 }
 
 /* ---------- 辺のスナップ(カレンダーと写真) ---------- */
