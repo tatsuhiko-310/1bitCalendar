@@ -1,17 +1,13 @@
 /*
  * 1bit Calendar のスタイル
  * 影は使わない(枠線と2色の塗りだけで区切る)。
- * 色は CSS 変数(--fg / --bg など)だけを使う。値は app.js の applyTheme() が
+ * 色は CSS 変数だけを使う: --fg(ドットの色)、--bg(背景の色)、--alert(COLOR RESET 専用)。値は app.js の applyTheme() が
  * 「ドットの色」と「背景の色」から設定するので、:root の初期値以外に色を直接書かない。
  */
 :root {
   --bg: #ffffff;
   --fg: #000000;
-  --panel: #ffffff;
-  --mute: #000000;
-  --on-fg: #ffffff;
-  --ink: #000000;
-  --paper: #ffffff;
+  --alert: #000000;
   box-sizing: border-box;
   padding-top: env(safe-area-inset-top, 0px);
   padding-bottom: env(safe-area-inset-bottom, 0px);
@@ -132,7 +128,7 @@ header {
   padding: 2px 12px;
   font-size: 13px;
   background: var(--alert);
-  color: var(--paper);
+  color: var(--bg);
   border-color: var(--alert);
   transform: translateY(calc(-100% - 20px - env(safe-area-inset-top, 0px)));
   visibility: hidden;
@@ -218,7 +214,7 @@ header h1 {
   gap: 5px;
 }
 .seg .tog[aria-pressed='true'] {
-  background: var(--panel);
+  background: var(--bg);
   color: var(--fg);
 }
 .tog::before {
@@ -245,7 +241,7 @@ header h1 {
 
 .panel {
   margin: 6px 12px 24px;
-  background: var(--panel);
+  background: var(--bg);
   color: var(--fg);
   border: 2px solid var(--fg);
 }
@@ -304,7 +300,7 @@ header h1 {
 }
 .tabs button[aria-selected='true'] {
   background: var(--fg);
-  color: var(--on-fg);
+  color: var(--bg);
 }
 /* 全タブを同じ場所に重ね、一番長いタブの高さにそろえる(切り替えてもタブの位置が動かない) */
 .panes {
@@ -333,7 +329,7 @@ header h1 {
   gap: 8px;
 }
 .row .val {
-  color: var(--mute);
+  color: var(--fg);
   font-size: 13px;
 }
 .two {
@@ -361,12 +357,12 @@ input[type='range'] {
 input[type='range']::-webkit-slider-runnable-track {
   height: 8px;
   border: 2px solid var(--fg);
-  background: var(--panel);
+  background: var(--bg);
 }
 input[type='range']::-moz-range-track {
   height: 4px;
   border: 2px solid var(--fg);
-  background: var(--panel);
+  background: var(--bg);
 }
 input[type='range']::-webkit-slider-thumb {
   -webkit-appearance: none;
@@ -399,17 +395,17 @@ input[type='checkbox'] {
   margin: 0;
   border: 2px solid var(--fg);
   border-radius: 0;
-  background: var(--panel);
+  background: var(--bg);
   cursor: pointer;
 }
 input[type='checkbox']:checked {
   background: var(--fg);
-  box-shadow: inset 0 0 0 3px var(--panel);
+  box-shadow: inset 0 0 0 3px var(--bg);
 }
 select {
   font: inherit;
   color: var(--fg);
-  background: var(--panel);
+  background: var(--bg);
   border: 2px solid var(--fg);
   border-radius: 0;
   padding: 8px 10px;
@@ -419,7 +415,7 @@ select {
 .btn {
   font: inherit;
   color: var(--fg);
-  background: var(--panel);
+  background: var(--bg);
   border: 2px solid var(--fg);
   border-radius: 0;
   min-height: 44px;
@@ -428,7 +424,7 @@ select {
 }
 .btn.primary {
   background: var(--fg);
-  color: var(--on-fg);
+  color: var(--bg);
 }
 .btn.wide {
   width: 100%;
@@ -459,7 +455,7 @@ input:focus-visible {
   font: inherit;
   font-size: 13px;
   color: var(--fg);
-  background: var(--panel);
+  background: var(--bg);
   min-height: 44px;
   border: 2px solid var(--fg);
   border-radius: 0;
@@ -469,12 +465,12 @@ input:focus-visible {
 }
 .sw[aria-pressed='true'] {
   background: var(--fg);
-  color: var(--on-fg);
+  color: var(--bg);
 }
 .note {
   margin: 0;
   font-size: 13px;
-  color: var(--mute);
+  color: var(--fg);
 }
 .sec {
   display: block;
@@ -490,7 +486,7 @@ input:focus-visible {
 .seg button {
   font: inherit;
   color: var(--fg);
-  background: var(--panel);
+  background: var(--bg);
   border: 0;
   min-height: 40px;
   cursor: pointer;
@@ -500,7 +496,7 @@ input:focus-visible {
 }
 .seg button[aria-pressed='true'] {
   background: var(--fg);
-  color: var(--on-fg);
+  color: var(--bg);
 }
 .sec.hd {
   display: flex;
@@ -590,7 +586,7 @@ input:focus-visible {
   display: flex;
 }
 #overlay .card {
-  background: var(--panel);
+  background: var(--bg);
   color: var(--fg);
   border: 2px solid var(--fg);
   padding: 14px;

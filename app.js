@@ -8,15 +8,15 @@
  *   ベイヤー行列 / サンプル画像 / 2色の点線
  *   写真のディザ           renderPhoto()
  *   カレンダー             drawCal()
- *   描画                   render(), finalImage(), fit()
+ *   描画                   render(), finalImage(), fit()  … fit() はプレビューと上のサイズ表示・下のボタンの段を配置
  *   UI の同期              syncUI()   … 状態 S を画面の入力欄に反映する
  *   入力の配線             各スライダー・ボタン → 状態 S
  *   ドラッグ・ピンチ・ホイール
  *   保存                   PNG の書き出し
- *   色の計算 / サイトの色  applyTheme()  … UI はドットの色と背景の色の2色だけ
+ *   色の計算 / サイトの色  applyTheme()  … UI はドットの色(--fg)と背景の色(--bg)の2色だけ
  *   辺のスナップ           snapTo()
  *   トリミング
- *   全画面表示
+ *   全画面表示             余白は黒(2色ルールの例外)
  *   効果音                 sfx
  *   タブのドットアイコン   ICONS, drawIcon()
  *   言語                   EN 表, t(), applyLang()
@@ -535,12 +535,11 @@
     const stage = $('#stage'),
       tools = $('.tools'),
       pad = 20,
-      gap = 18,
-      shadow = 0; // プレビューに影はない(枠線のみ)
-    const aw = Math.max(50, stage.clientWidth - pad - shadow);
+      gap = 18;
+    const aw = Math.max(50, stage.clientWidth - pad);
     const sizebar = $('.sizebox'),
       sizeH = sizebar.offsetHeight + 2;
-    const ah = Math.max(50, stage.clientHeight - pad - gap - tools.offsetHeight - sizeH - shadow);
+    const ah = Math.max(50, stage.clientHeight - pad - gap - tools.offsetHeight - sizeH);
     const k = Math.min(aw / S.W, ah / S.H),
       w = Math.floor(S.W * k);
     cv.style.width = w + 'px';
@@ -1048,13 +1047,8 @@
     const ink = S.color.ink,
       paper = S.color.paper,
       st = document.documentElement.style;
-    st.setProperty('--bg', paper);
-    st.setProperty('--fg', ink);
-    st.setProperty('--panel', paper);
-    st.setProperty('--mute', ink);
-    st.setProperty('--on-fg', paper);
-    st.setProperty('--ink', ink);
-    st.setProperty('--paper', paper);
+    st.setProperty('--fg', ink); // ドットの色
+    st.setProperty('--bg', paper); // 背景の色
     // 2色が近くて見にくいときだけリセットを出す。色は背景の色を反転した色
     // (中間の明るさで反転するとほぼ同じ色になるときだけ、白か黒の見やすい方)
     const p = hex(paper),
