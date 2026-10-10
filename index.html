@@ -27,8 +27,12 @@ body{
 }
 
 header{ height:44px; display:flex; align-items:center; justify-content:space-between; padding:0 4px 0 14px; }
-.hdr{ display:flex; align-items:center; gap:4px; }
-#langSw{ font:inherit; font-size:13px; min-height:30px; padding:0 8px; color:var(--fg); background:var(--panel); border:2px solid var(--fg); border-radius:0; cursor:pointer; }
+.hdr{ display:flex; align-items:center; gap:2px; }
+/* ヘッダーの設定は控えめに: 枠なしの小さい文字と等倍アイコン。押せる範囲は44pxのまま */
+#langSw{ font:inherit; font-size:12px; min-width:44px; min-height:44px; padding:0 6px; color:var(--fg); background:transparent; border:0; border-radius:0; cursor:pointer; }
+#langSw:hover,#langSw:focus-visible{ text-decoration:underline; outline:none; }
+#sound .ico{ width:16px; height:16px; }
+#sound:hover,#sound:focus-visible{ outline:none; box-shadow:inset 0 -2px 0 var(--fg); }
 #sound{ width:44px; height:44px; padding:0; border:0; background:transparent; color:var(--fg); cursor:pointer; display:grid; place-items:center; }
 /* 2色が近くて見にくいときだけ、画面右上に上からスライドインする */
 #resetColors{
