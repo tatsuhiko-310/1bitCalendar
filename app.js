@@ -536,7 +536,7 @@
       tools = $('.tools'),
       pad = 20,
       gap = 18,
-      shadow = 4;
+      shadow = 0; // プレビューに影はない(枠線のみ)
     const aw = Math.max(50, stage.clientWidth - pad - shadow);
     const sizebar = $('.sizebox'),
       sizeH = sizebar.offsetHeight + 2;

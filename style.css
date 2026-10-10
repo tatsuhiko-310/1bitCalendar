@@ -1,5 +1,6 @@
 /*
  * 1bit Calendar のスタイル
+ * 影は使わない(枠線と2色の塗りだけで区切る)。
  * 色は CSS 変数(--fg / --bg など)だけを使う。値は app.js の applyTheme() が
  * 「ドットの色」と「背景の色」から設定するので、:root の初期値以外に色を直接書かない。
  */
@@ -133,7 +134,6 @@ header {
   background: var(--alert);
   color: var(--paper);
   border-color: var(--alert);
-  box-shadow: none;
   transform: translateY(calc(-100% - 20px - env(safe-area-inset-top, 0px)));
   visibility: hidden;
   transition:
@@ -237,7 +237,6 @@ header h1 {
   touch-action: none;
   cursor: grab;
   border: 2px solid var(--fg);
-  box-shadow: 4px 4px 0 var(--fg);
   background: var(--bg);
 }
 #cv.dragging {
@@ -426,16 +425,10 @@ select {
   min-height: 44px;
   padding: 8px 14px;
   cursor: pointer;
-  box-shadow: 3px 3px 0 var(--fg);
-}
-.btn:active {
-  transform: translate(2px, 2px);
-  box-shadow: 1px 1px 0 var(--fg);
 }
 .btn.primary {
   background: var(--fg);
   color: var(--on-fg);
-  box-shadow: 3px 3px 0 var(--mute);
 }
 .btn.wide {
   width: 100%;
@@ -472,16 +465,11 @@ input:focus-visible {
   border-radius: 0;
   cursor: pointer;
   padding: 4px;
-  box-shadow: 2px 2px 0 var(--fg);
   white-space: nowrap;
 }
 .sw[aria-pressed='true'] {
   background: var(--fg);
   color: var(--on-fg);
-}
-.sw:active {
-  transform: translate(1px, 1px);
-  box-shadow: 1px 1px 0 var(--fg);
 }
 .note {
   margin: 0;
@@ -605,7 +593,6 @@ input:focus-visible {
   background: var(--panel);
   color: var(--fg);
   border: 2px solid var(--fg);
-  box-shadow: 4px 4px 0 var(--fg);
   padding: 14px;
   max-width: min(420px, 100%);
   display: grid;
