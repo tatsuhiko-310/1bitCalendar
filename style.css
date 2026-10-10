@@ -57,27 +57,36 @@ header {
   gap: 2px;
 }
 /* ヘッダーの設定は控えめに: 枠なしの小さい文字と等倍アイコン。押せる範囲は44pxのまま */
-/* 画像のサイズ: ヘッダーに置く作品全体の設定。見える文字は短い名前で、
-   その上に透明な select を重ねて、押すと端末標準の一覧(寸法つき)が開く */
+/* 画像のサイズ: プレビューの上に寸法だけを出す(左端はプレビューにそろえ、幅は fit() が設定)。
+   その上に透明な select を重ねて、押すと「iPhone 1179×2556」のような一覧が開く */
 .sizebox {
   position: relative;
-  min-width: 0;
+  align-self: center;
   display: flex;
   align-items: center;
-  min-height: 44px;
-  padding: 0 8px;
+  height: 28px;
   font-size: 13px;
+  font-variant-numeric: tabular-nums;
   white-space: nowrap;
   cursor: pointer;
 }
 #sizeLabel {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
   text-decoration: underline;
   text-underline-offset: 3px;
 }
-/* ▾ は省略されないよう、名前とは別に置く */
+.sizebox select {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.sizebox:focus-within #sizeLabel {
+  text-decoration-style: dashed;
+}
 .sizebox::after {
   content: '▾';
   margin-left: 4px;
@@ -183,7 +192,9 @@ header h1 {
 .cvbox {
   flex: none;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
 }
 .tools {
   display: flex;

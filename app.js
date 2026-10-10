@@ -538,11 +538,14 @@
       gap = 18,
       shadow = 4;
     const aw = Math.max(50, stage.clientWidth - pad - shadow);
-    const ah = Math.max(50, stage.clientHeight - pad - gap - tools.offsetHeight - shadow);
+    const sizebar = $('.sizebox'),
+      sizeH = sizebar.offsetHeight + 6;
+    const ah = Math.max(50, stage.clientHeight - pad - gap - tools.offsetHeight - sizeH - shadow);
     const k = Math.min(aw / S.W, ah / S.H),
       w = Math.floor(S.W * k);
     cv.style.width = w + 'px';
     cv.style.height = Math.floor(S.H * k) + 'px';
+    sizebar.style.width = w + 'px';
     // ボタンの段の横幅はプレビューにそろえる(細いときはボタンが収まる幅まで)
     tools.style.width = Math.min(stage.clientWidth - pad, Math.max(w + 4, 340)) + 'px';
     // PC: 右のパネルの上端をプレビューの上端にそろえる
@@ -613,9 +616,8 @@
         )
       );
     $('#size').value = S.W + 'x' + S.H;
-    // ヘッダーには寸法を除いた短い名前だけ出す(例: iPhone、この端末)
-    const so = $('#size').selectedOptions[0];
-    $('#sizeLabel').textContent = so ? so.textContent.replace(/\s*\(.*$/, '') : '';
+    // プレビューの上には寸法だけ出す(機種名は選ぶときの一覧にだけ出る)
+    $('#sizeLabel').textContent = S.W + '×' + S.H;
     $('#cropBtns').classList.toggle('single', !S.crop);
     applyTheme();
   }
@@ -1620,7 +1622,7 @@
     カレンダー: 'Calendar',
     色: 'Color',
     画像のサイズ: 'Image size',
-    '正方形(1080×1080)': 'Square (1080×1080)',
+    '正方形 1080×1080': 'Square 1080×1080',
     この端末: 'This device',
     写真を選ぶ: 'Choose photo',
     トリミング: 'Crop',
@@ -1714,7 +1716,7 @@
     });
     i18nAttr.forEach(({ el, a, ja }) => el.setAttribute(a, t(ja)));
     document.querySelectorAll('option[data-device]').forEach(o => {
-      o.textContent = `${t('この端末')}(${o.dataset.device})`;
+      o.textContent = `${t('この端末')} ${o.dataset.device}`;
     });
     if (msg.textContent) msg.textContent = '';
     syncUI();
