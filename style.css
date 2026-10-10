@@ -83,11 +83,6 @@ header {
   opacity: 0;
   cursor: pointer;
 }
-/* キーボードで選んでいるときだけ下線(タップ後に残らないよう :focus-visible で判定) */
-.sizebox:has(select:focus-visible) #sizeLabel {
-  text-decoration: underline dashed;
-  text-underline-offset: 3px;
-}
 /* ヘッダーの設定は控えめに: 枠なしの小さい文字と等倍アイコン。押せる範囲は44pxのまま */
 #langSw {
   font: inherit;
