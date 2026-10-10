@@ -26,7 +26,8 @@ body{
   -webkit-text-size-adjust:100%;
 }
 
-header{ height:44px; display:flex; align-items:center; padding:0 14px; }
+header{ height:44px; display:flex; align-items:center; justify-content:space-between; padding:0 4px 0 14px; }
+#sound{ width:44px; height:44px; padding:0; border:0; background:transparent; color:var(--fg); cursor:pointer; display:grid; place-items:center; }
 /* 2色が近くて見にくいときだけ、画面右上に上からスライドインする */
 #resetColors{
   position:fixed; z-index:40; right:10px; top:calc(env(safe-area-inset-top,0px) + 8px);
@@ -166,7 +167,7 @@ button:focus-visible,select:focus-visible,input:focus-visible{ outline:3px dashe
 </style>
 </head>
 <body>
-<header><h1>1bit Calendar</h1></header>
+<header><h1>1bit Calendar</h1><button type="button" id="sound" aria-pressed="true" aria-label="音" title="音"><svg class="ico" data-ico="sndOn" aria-hidden="true"></svg></button></header>
 <button class="btn" id="resetColors" type="button">COLOR RESET</button>
 
 <main class="app">
@@ -176,7 +177,6 @@ button:focus-visible,select:focus-visible,input:focus-visible{ outline:3px dashe
       <div class="seg" role="group" aria-label="プレビューの設定">
         <button type="button" class="tog" id="guide" aria-pressed="false">ガイド</button>
         <button type="button" class="tog" id="snap" aria-pressed="true">スナップ</button>
-        <button type="button" class="tog" id="sound" aria-pressed="true">音</button>
       </div>
       <button class="btn" id="fsOpen" type="button">全画面</button>
       <button class="btn primary" id="save" type="button"><svg class="ico" data-ico="out" aria-hidden="true"></svg>保存</button>
@@ -674,6 +674,7 @@ function syncUI() {
   $('#calFont').value = S.cal.font; $('#calFrame').checked = S.cal.frame; $('#calBg').checked = S.cal.bg;
   $('#guide').setAttribute('aria-pressed', String(S.guide)); $('#snap').setAttribute('aria-pressed', String(S.snap));
   $('#sound').setAttribute('aria-pressed', String(S.sound));
+  drawIcon($('#sound svg'), S.sound ? 'sndOn' : 'sndOff');
   ['ink', 'paper'].forEach(c => {
     const hx = $('#hex-' + c); if (document.activeElement !== hx) hx.value = S.color[c].toUpperCase();
     'hsl'.split('').forEach((k, i) => { $(`#${c}-${k}`).value = S.hsl[c][i]; $(`#v-${c}-${k}`).textContent = S.hsl[c][i]; });
@@ -1230,6 +1231,30 @@ const ICONS = {
     '..##......##..',
     '....######....'
   ],
+  sndOn: [
+    '.....#........',
+    '....##...#....',
+    '...###....#...',
+    '######..#..#..',
+    '######...#.#..',
+    '######...#.#..',
+    '######..#..#..',
+    '...###....#...',
+    '....##...#....',
+    '.....#........'
+  ],
+  sndOff: [
+    '.....#........',
+    '....##........',
+    '...###........',
+    '######.#...#..',
+    '######..#.#...',
+    '######...#....',
+    '######..#.#...',
+    '...###.#...#..',
+    '....##........',
+    '.....#........'
+  ],
   out: [
     '############..',
     '#..#######..#.',
@@ -1246,14 +1271,15 @@ const ICONS = {
     '##############'
   ]
 };
-document.querySelectorAll('svg.ico').forEach(svg => {
-  const rows = ICONS[svg.dataset.ico], h = rows.length, w = Math.max(...rows.map(r => r.length));
+function drawIcon(svg, name) {
+  const rows = ICONS[name], h = rows.length, w = Math.max(...rows.map(r => r.length));
   const ox = Math.floor((16 - w) / 2), oy = Math.floor((16 - h) / 2);
   let d = '';
   rows.forEach((r, y) => [...r].forEach((c, x) => { if (c === '#') d += `M${x + ox} ${y + oy}h1v1h-1z`; }));
   svg.setAttribute('viewBox', '0 0 16 16');
   svg.innerHTML = `<path d="${d}"/>`;
-});
+}
+document.querySelectorAll('svg.ico').forEach(svg => drawIcon(svg, svg.dataset.ico));
 
 /* ---------- 起動 ---------- */
 S.src = makeSample(); S.orig = S.src; S.crop = null; autoPlace();
