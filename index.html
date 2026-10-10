@@ -42,11 +42,11 @@ header h1{ margin:0; font-size:20px; font-weight:400; letter-spacing:.04em; }
 .stage{
   position:sticky; top:env(safe-area-inset-top,0px); z-index:5;
   height:52vh; height:52dvh;
-  display:flex; flex-direction:column; gap:10px;
+  display:flex; flex-direction:column; justify-content:center; gap:18px;
   background:var(--bg); padding:10px;
 }
-.cvbox{ flex:1; min-height:0; display:flex; align-items:center; justify-content:center; }
-.tools{ display:flex; gap:8px; width:100%; max-width:480px; margin:0 auto; flex:none; }
+.cvbox{ flex:none; display:flex; justify-content:center; }
+.tools{ display:flex; gap:8px; max-width:100%; margin:0 auto; flex:none; }
 .tools .seg{ flex:1; min-width:0; display:flex; }
 .tools .seg button{ flex:1 1 auto; font-size:13px; padding:0 6px; white-space:nowrap; }
 .tools > .btn{ flex:none; min-height:44px; padding:4px 8px; font-size:13px; white-space:nowrap; }
@@ -162,7 +162,7 @@ button:focus-visible,select:focus-visible,input:focus-visible{ outline:3px dashe
 @media (min-width:860px){
   .app{ display:grid; grid-template-columns:minmax(0,1fr) 400px; align-items:center; gap:8px; padding-right:12px; }
   .stage{ height:calc(100vh - 44px); height:calc(100dvh - 44px); }
-  .panel{ margin:0; align-self:center; max-height:calc(100vh - 68px); max-height:calc(100dvh - 68px); overflow-y:auto; }
+  .panel{ margin:0; align-self:start; overflow-y:auto; }
 }
 </style>
 </head>
@@ -650,12 +650,23 @@ function finalImage() {
 let raf = 0;
 function schedule() { if (!raf) raf = requestAnimationFrame(() => { raf = 0; render(true); }); }
 
+// プレビューの大きさ: ボタンの段(18pxあけて下に置く)の分を引いて、表示領域に収める
 function fit() {
-  const st = $('#cvbox').getBoundingClientRect();
-  const aw = Math.max(50, st.width - 8), ah = Math.max(50, st.height - 8);
-  const k = Math.min(aw / S.W, ah / S.H);
-  cv.style.width = Math.floor(S.W * k) + 'px';
+  const stage = $('#stage'), tools = $('.tools'), pad = 20, gap = 18, shadow = 4;
+  const aw = Math.max(50, stage.clientWidth - pad - shadow);
+  const ah = Math.max(50, stage.clientHeight - pad - gap - tools.offsetHeight - shadow);
+  const k = Math.min(aw / S.W, ah / S.H), w = Math.floor(S.W * k);
+  cv.style.width = w + 'px';
   cv.style.height = Math.floor(S.H * k) + 'px';
+  // ボタンの段の横幅はプレビューにそろえる(細いときはボタンが収まる幅まで)
+  tools.style.width = Math.min(stage.clientWidth - pad, Math.max(w + 4, 340)) + 'px';
+  // PC: 右のパネルの上端をプレビューの上端にそろえる
+  const panel = $('.panel');
+  if (window.matchMedia('(min-width:860px)').matches) {
+    const top = cv.getBoundingClientRect().top - $('.app').getBoundingClientRect().top;
+    panel.style.marginTop = top + 'px';
+    panel.style.maxHeight = `calc(100dvh - 44px - ${top}px - 12px)`;
+  } else { panel.style.marginTop = ''; panel.style.maxHeight = ''; }
 }
 
 /* ---------- UI の同期 ---------- */
@@ -1285,7 +1296,7 @@ document.querySelectorAll('svg.ico').forEach(svg => drawIcon(svg, svg.dataset.ic
 S.src = makeSample(); S.orig = S.src; S.crop = null; autoPlace();
 syncUI(); fit(); render(true);
 window.addEventListener('resize', fit);
-if (window.ResizeObserver) new ResizeObserver(fit).observe($('#cvbox'));
+if (window.ResizeObserver) new ResizeObserver(fit).observe($('#stage'));
 if (document.fonts && document.fonts.load) {
   document.fonts.load(`16px "DotGothic16"`, '0123456789年月日火水木金土SMTWFJANUARYBCDEGHILOPRV').then(() => schedule()).catch(() => {});
   document.fonts.ready.then(() => schedule());
