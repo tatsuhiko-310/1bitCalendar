@@ -1112,36 +1112,42 @@ $('#fsOpen').addEventListener('click', openFs);
 fs.addEventListener('click', closeFs);
 document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement) fs.classList.remove('open'); });
 
-/* ---------- 効果音(矩形波のレトロな音。Web Audio で生成) ---------- */
+/* ---------- 効果音(道具らしい短いクリック音。Web Audio で生成) ---------- */
+// 音階やメロディは使わず、スイッチやダイヤルのような短いノイズのクリックで鳴らす
 const sfx = (() => {
-  let ac = null, lastTick = 0;
+  let ac = null, noiseBuf = null, lastTick = 0;
   const audio = () => {
     if (!ac) { const A = window.AudioContext || window.webkitAudioContext; if (!A) return null; ac = new A(); }
     if (ac.state === 'suspended') ac.resume();
     return ac;
   };
-  // notes: [周波数Hz, 長さ秒] を順に鳴らす
-  const play = (notes, vol = .05) => {
+  // 帯域を絞ったノイズを短く鳴らす。freq が高いほど軽く硬い音
+  const click = (freq, dur, vol, delay = 0) => {
     if (!S.sound) return;
     const a = audio(); if (!a) return;
-    let t = a.currentTime + .005;
-    notes.forEach(([f, d]) => {
-      const o = a.createOscillator(), g = a.createGain();
-      o.type = 'square'; o.frequency.value = f;
-      g.gain.setValueAtTime(vol, t); g.gain.linearRampToValueAtTime(0, t + d);
-      o.connect(g).connect(a.destination); o.start(t); o.stop(t + d);
-      t += d;
-    });
+    if (!noiseBuf) {
+      noiseBuf = a.createBuffer(1, Math.round(a.sampleRate * .05), a.sampleRate);
+      const d = noiseBuf.getChannelData(0);
+      for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    }
+    const t = a.currentTime + .005 + delay;
+    const src = a.createBufferSource(), bp = a.createBiquadFilter(), g = a.createGain();
+    src.buffer = noiseBuf;
+    bp.type = 'bandpass'; bp.frequency.value = freq; bp.Q.value = 2.5;
+    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+    src.connect(bp).connect(g).connect(a.destination);
+    src.start(t); src.stop(t + dur + .01);
   };
   return {
     unlock: audio,
-    click: () => play([[880, .035]]),
-    on: () => play([[660, .03], [990, .045]]),
-    off: () => play([[990, .03], [660, .045]]),
-    snap: () => play([[1320, .02]], .04),
-    save: () => play([[523, .05], [659, .05], [784, .05], [1047, .09]]),
-    // スライダー: 値の位置で音程が変わる短いチック(鳴らしすぎない)
-    tick: r => { const n = performance.now(); if (n - lastTick < 40) return; lastTick = n; play([[220 + r * 880, .018]], .035); }
+    click: () => click(3200, .018, .5),
+    on: () => click(4200, .02, .55),
+    off: () => click(2400, .02, .5),
+    snap: () => click(5500, .012, .45),
+    // シャッターのような2回のクリック
+    save: () => { click(2000, .03, .6); click(3000, .025, .5, .07); },
+    // スライダー: ダイヤルの目盛りのような小さなチック(鳴らしすぎない)
+    tick: () => { const n = performance.now(); if (n - lastTick < 45) return; lastTick = n; click(6000, .006, .3); }
   };
 })();
 // 最初の操作で音声を使えるようにする(ブラウザの自動再生制限のため)
@@ -1155,7 +1161,7 @@ document.addEventListener('click', e => {
 });
 document.addEventListener('input', e => {
   const t = e.target; if (t.type !== 'range') return;
-  sfx.tick((t.value - t.min) / (t.max - t.min));
+  sfx.tick();
 });
 document.addEventListener('change', e => {
   const t = e.target;
