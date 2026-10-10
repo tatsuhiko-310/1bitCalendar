@@ -1,3 +1,5 @@
+> この資料は、チャット版の Claude から Claude Code へ作業を移したとき(2026年10月)の引き継ぎ資料です。その後に大きく変わった点が多いので、現在の仕様は `README.md` と `CLAUDE.md` を参照してください。
+
 # 1bit Calendar 引き継ぎ資料
 
 Claude(チャット)で作ってきた「1bit Calendar」を Claude Code に移すための資料です。

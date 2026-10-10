@@ -1,0 +1,608 @@
+/*
+ * 1bit Calendar のスタイル
+ * 色は CSS 変数(--fg / --bg など)だけを使う。値は app.js の applyTheme() が
+ * 「ドットの色」と「背景の色」から設定するので、:root の初期値以外に色を直接書かない。
+ */
+:root {
+  --bg: #ffffff;
+  --fg: #000000;
+  --panel: #ffffff;
+  --mute: #000000;
+  --on-fg: #ffffff;
+  --ink: #000000;
+  --paper: #ffffff;
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+html {
+  scroll-padding-top: env(safe-area-inset-top, 0px);
+}
+*,
+*::before,
+*::after {
+  box-sizing: inherit;
+}
+/* タップ時のブラウザ標準のハイライト(半透明でゆっくり消える)を出さない */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+button,
+select,
+input,
+label {
+  touch-action: manipulation;
+}
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: 'DotGothic16', 'Hiragino Sans', 'Yu Gothic', monospace;
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-text-size-adjust: 100%;
+}
+
+header {
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px 0 14px;
+}
+.hdr {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+/* ヘッダーの設定は控えめに: 枠なしの小さい文字と等倍アイコン。押せる範囲は44pxのまま */
+#langSw {
+  font: inherit;
+  font-size: 12px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 6px;
+  color: var(--fg);
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  cursor: pointer;
+}
+#langSw:hover,
+#langSw:focus-visible {
+  text-decoration: underline;
+  outline: none;
+}
+#sound .ico {
+  width: 16px;
+  height: 16px;
+}
+#sound:hover,
+#sound:focus-visible {
+  outline: none;
+  box-shadow: inset 0 -2px 0 var(--fg);
+}
+#sound {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--fg);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+/* 2色が近くて見にくいときだけ、画面右上に上からスライドインする */
+#resetColors {
+  position: fixed;
+  z-index: 40;
+  right: 10px;
+  top: calc(env(safe-area-inset-top, 0px) + 8px);
+  min-height: 36px;
+  padding: 2px 12px;
+  font-size: 13px;
+  background: var(--alert);
+  color: var(--paper);
+  border-color: var(--alert);
+  box-shadow: none;
+  transform: translateY(calc(-100% - 20px - env(safe-area-inset-top, 0px)));
+  visibility: hidden;
+  transition:
+    transform 0.2s ease-out,
+    visibility 0s 0.2s;
+}
+#resetColors.show {
+  transform: none;
+  visibility: visible;
+  transition: transform 0.2s ease-out;
+}
+header h1 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+}
+.app {
+  display: block;
+}
+.stage {
+  position: sticky;
+  top: env(safe-area-inset-top, 0px);
+  z-index: 5;
+  height: 52vh;
+  height: 52dvh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 18px;
+  background: var(--bg);
+  padding: 10px;
+}
+.cvbox {
+  flex: none;
+  display: flex;
+  justify-content: center;
+}
+.tools {
+  display: flex;
+  gap: 8px;
+  max-width: 100%;
+  margin: 0 auto;
+  flex: none;
+}
+.tools .seg {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+}
+.tools .seg button {
+  flex: 1 1 auto;
+  font-size: 13px;
+  padding: 0 6px;
+  white-space: nowrap;
+}
+.tools > .btn {
+  flex: none;
+  min-height: 44px;
+  padding: 4px 8px;
+  font-size: 13px;
+  white-space: nowrap;
+}
+.tools .btn.primary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.tools .btn.primary .ico {
+  width: 16px;
+  height: 16px;
+}
+/* ON/OFF はボタン全体を塗らず、■(ON)/□(OFF)の印で示す */
+.tog[aria-pressed] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+.seg .tog[aria-pressed='true'] {
+  background: var(--panel);
+  color: var(--fg);
+}
+.tog::before {
+  content: '';
+  flex: none;
+  width: 12px;
+  height: 12px;
+  box-sizing: border-box;
+  border: 2px solid currentColor;
+}
+.tog[aria-pressed='true']::before {
+  background: currentColor;
+}
+#cv {
+  display: block;
+  touch-action: none;
+  cursor: grab;
+  border: 2px solid var(--fg);
+  box-shadow: 4px 4px 0 var(--fg);
+  background: var(--bg);
+}
+#cv.dragging {
+  cursor: grabbing;
+}
+
+.panel {
+  margin: 6px 12px 24px;
+  background: var(--panel);
+  color: var(--fg);
+  border: 2px solid var(--fg);
+}
+#fs {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: var(--bg);
+  display: none;
+  cursor: pointer;
+}
+#fs.open {
+  display: block;
+}
+#fsCv {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+#fsClose {
+  position: absolute;
+  top: calc(env(safe-area-inset-top, 0px) + 10px);
+  right: 10px;
+}
+.tabs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-bottom: 2px solid var(--fg);
+}
+.tabs button {
+  font: inherit;
+  color: var(--fg);
+  background: transparent;
+  border: 0;
+  border-right: 2px solid var(--fg);
+  min-height: 44px;
+  padding: 6px 4px 4px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  font-size: 12px;
+  line-height: 1.2;
+}
+.ico {
+  width: 32px;
+  height: 32px;
+  display: block;
+  fill: currentColor;
+  shape-rendering: crispEdges;
+}
+.tabs button:last-child {
+  border-right: 0;
+}
+.tabs button[aria-selected='true'] {
+  background: var(--fg);
+  color: var(--on-fg);
+}
+/* 全タブを同じ場所に重ね、一番長いタブの高さにそろえる(切り替えてもタブの位置が動かない) */
+.panes {
+  display: grid;
+}
+.pane {
+  grid-area: 1/1;
+  align-self: start;
+  padding: 14px 12px 16px;
+  display: grid;
+  gap: 14px;
+}
+.pane[hidden] {
+  display: grid;
+  visibility: hidden;
+}
+
+.row {
+  display: grid;
+  gap: 4px;
+}
+.row .top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+.row .val {
+  color: var(--mute);
+  font-size: 13px;
+}
+.two {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+label.check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 36px;
+  cursor: pointer;
+}
+/* スライダー・チェックは2色で描く(ブラウザ標準のグレーを出さない) */
+input[type='range'] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 28px;
+  margin: 2px 0;
+  background: transparent;
+  cursor: pointer;
+}
+input[type='range']::-webkit-slider-runnable-track {
+  height: 8px;
+  border: 2px solid var(--fg);
+  background: var(--panel);
+}
+input[type='range']::-moz-range-track {
+  height: 4px;
+  border: 2px solid var(--fg);
+  background: var(--panel);
+}
+input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px;
+  height: 24px;
+  margin-top: -10px;
+  border: 0;
+  border-radius: 0;
+  background: var(--fg);
+}
+input[type='range'].inert::-webkit-slider-runnable-track {
+  border-style: dashed;
+}
+input[type='range'].inert::-moz-range-track {
+  border-style: dashed;
+}
+input[type='range']::-moz-range-thumb {
+  width: 20px;
+  height: 24px;
+  border: 0;
+  border-radius: 0;
+  background: var(--fg);
+}
+input[type='checkbox'] {
+  -webkit-appearance: none;
+  appearance: none;
+  flex: none;
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  border: 2px solid var(--fg);
+  border-radius: 0;
+  background: var(--panel);
+  cursor: pointer;
+}
+input[type='checkbox']:checked {
+  background: var(--fg);
+  box-shadow: inset 0 0 0 3px var(--panel);
+}
+select {
+  font: inherit;
+  color: var(--fg);
+  background: var(--panel);
+  border: 2px solid var(--fg);
+  border-radius: 0;
+  padding: 8px 10px;
+  min-height: 44px;
+  width: 100%;
+}
+.btn {
+  font: inherit;
+  color: var(--fg);
+  background: var(--panel);
+  border: 2px solid var(--fg);
+  border-radius: 0;
+  min-height: 44px;
+  padding: 8px 14px;
+  cursor: pointer;
+  box-shadow: 3px 3px 0 var(--fg);
+}
+.btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 var(--fg);
+}
+.btn.primary {
+  background: var(--fg);
+  color: var(--on-fg);
+  box-shadow: 3px 3px 0 var(--mute);
+}
+.btn.wide {
+  width: 100%;
+}
+button:focus-visible,
+select:focus-visible,
+input:focus-visible {
+  outline: 3px dashed var(--fg);
+  outline-offset: 2px;
+}
+
+.monthbar {
+  display: grid;
+  grid-template-columns: 48px 1fr 48px;
+  gap: 8px;
+  align-items: center;
+}
+.monthbar .lbl {
+  text-align: center;
+  font-size: 17px;
+}
+.swatches {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.sw {
+  font: inherit;
+  font-size: 13px;
+  color: var(--fg);
+  background: var(--panel);
+  min-height: 44px;
+  border: 2px solid var(--fg);
+  border-radius: 0;
+  cursor: pointer;
+  padding: 4px;
+  box-shadow: 2px 2px 0 var(--fg);
+  white-space: nowrap;
+}
+.sw[aria-pressed='true'] {
+  background: var(--fg);
+  color: var(--on-fg);
+}
+.sw:active {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0 var(--fg);
+}
+.note {
+  margin: 0;
+  font-size: 13px;
+  color: var(--mute);
+}
+.sec {
+  display: block;
+  border-bottom: 2px solid var(--fg);
+  padding-bottom: 4px;
+  margin-top: 6px;
+}
+.seg {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border: 2px solid var(--fg);
+}
+.seg button {
+  font: inherit;
+  color: var(--fg);
+  background: var(--panel);
+  border: 0;
+  min-height: 40px;
+  cursor: pointer;
+}
+.seg button + button {
+  border-left: 2px solid var(--fg);
+}
+.seg button[aria-pressed='true'] {
+  background: var(--fg);
+  color: var(--on-fg);
+}
+.sec.hd {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.hex {
+  font: inherit;
+  font-size: 14px;
+  width: 7.5em;
+  min-height: 36px;
+  padding: 2px 0;
+  text-align: right;
+  text-transform: uppercase;
+  color: var(--fg);
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+}
+.hex:focus {
+  outline: none;
+  text-decoration: underline;
+}
+
+#crop {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  background: var(--bg);
+  color: var(--fg);
+  display: none;
+  flex-direction: column;
+  gap: 10px;
+  padding: calc(env(safe-area-inset-top, 0px) + 10px) 10px calc(env(safe-area-inset-bottom, 0px) + 10px);
+}
+#crop.open {
+  display: flex;
+}
+#cropAsp {
+  grid-template-columns: repeat(5, 1fr);
+}
+.cropstage {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#cropCv {
+  display: block;
+  touch-action: none;
+  outline: 2px solid var(--fg);
+  background: var(--bg);
+}
+.cropbtns {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+}
+
+#cropBtns.single {
+  grid-template-columns: 1fr;
+}
+#cropBtns.single #cropReset {
+  display: none;
+}
+#msg {
+  font-size: 13px;
+  margin: -8px 0 0;
+}
+#msg:empty {
+  display: none;
+}
+
+#overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: var(--bg);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  overflow: auto;
+}
+#overlay.open {
+  display: flex;
+}
+#overlay .card {
+  background: var(--panel);
+  color: var(--fg);
+  border: 2px solid var(--fg);
+  box-shadow: 4px 4px 0 var(--fg);
+  padding: 14px;
+  max-width: min(420px, 100%);
+  display: grid;
+  gap: 10px;
+}
+#overlay img {
+  width: 100%;
+  height: auto;
+  display: block;
+  border: 2px solid var(--fg);
+  max-height: 60vh;
+  object-fit: contain;
+}
+
+@media (min-width: 860px) {
+  .app {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 400px;
+    align-items: center;
+    gap: 8px;
+    padding-right: 12px;
+  }
+  .stage {
+    height: calc(100vh - 44px);
+    height: calc(100dvh - 44px);
+  }
+  .panel {
+    margin: 0;
+    align-self: start;
+    overflow-y: auto;
+  }
+}
