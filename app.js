@@ -1371,7 +1371,6 @@
   const fs = $('#fs'),
     fsCv = $('#fsCv');
   let fsImg = null;
-  // 余白は2色の市松模様の網点(壁紙の外だと分かるように)。壁紙のまわりにドットの色の細い枠
   function drawFs() {
     if (!fsImg || !fs.classList.contains('open')) return;
     const dpr = window.devicePixelRatio || 1,
@@ -1379,26 +1378,15 @@
       H = Math.round(fs.clientHeight * dpr);
     fsCv.width = W;
     fsCv.height = H;
-    const g = fsCv.getContext('2d'),
-      u = Math.max(1, Math.round(dpr * 2)); // 網点1つ = 画面上の2px
-    const pc = document.createElement('canvas');
-    pc.width = pc.height = u * 2;
-    const pg = pc.getContext('2d');
-    pg.fillStyle = S.color.paper;
-    pg.fillRect(0, 0, u * 2, u * 2);
-    pg.fillStyle = S.color.ink;
-    pg.fillRect(0, 0, u, u);
-    pg.fillRect(u, u, u, u);
-    g.fillStyle = g.createPattern(pc, 'repeat');
+    // 余白は黒(写真ビューアと同じ扱い。2色ルールの例外)
+    const g = fsCv.getContext('2d');
+    g.fillStyle = '#000';
     g.fillRect(0, 0, W, H);
-    const fr = Math.max(1, Math.round(dpr * 2)),
-      k = Math.min((W - fr * 2) / S.W, (H - fr * 2) / S.H);
+    const k = Math.min(W / S.W, H / S.H);
     const w = Math.round(S.W * k),
       h = Math.round(S.H * k),
       x = Math.round((W - w) / 2),
       y = Math.round((H - h) / 2);
-    g.fillStyle = S.color.ink;
-    g.fillRect(x - fr, y - fr, w + fr * 2, h + fr * 2);
     g.imageSmoothingQuality = 'high';
     g.drawImage(fsImg, x, y, w, h);
   }

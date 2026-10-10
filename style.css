@@ -253,7 +253,7 @@ header h1 {
   position: fixed;
   inset: 0;
   z-index: 60;
-  background: var(--bg);
+  background: #000; /* 全画面の余白は黒(2色ルールの例外) */
   display: none;
   cursor: pointer;
 }
