@@ -28,7 +28,7 @@ body{
 
 header{ height:44px; display:flex; align-items:center; justify-content:space-between; padding:0 4px 0 14px; }
 .hdr{ display:flex; align-items:center; gap:4px; }
-#langSw button{ min-height:30px; padding:0 8px; font-size:13px; }
+#langSw{ font:inherit; font-size:13px; min-height:30px; padding:0 8px; color:var(--fg); background:var(--panel); border:2px solid var(--fg); border-radius:0; cursor:pointer; }
 #sound{ width:44px; height:44px; padding:0; border:0; background:transparent; color:var(--fg); cursor:pointer; display:grid; place-items:center; }
 /* 2色が近くて見にくいときだけ、画面右上に上からスライドインする */
 #resetColors{
@@ -169,7 +169,7 @@ button:focus-visible,select:focus-visible,input:focus-visible{ outline:3px dashe
 </style>
 </head>
 <body>
-<header><h1>1bit Calendar</h1><div class="hdr"><div class="seg" id="langSw" role="group" aria-label="言語"><button type="button" data-lang="ja" aria-pressed="false">JA</button><button type="button" data-lang="en" aria-pressed="true">EN</button></div><button type="button" id="sound" aria-pressed="true" aria-label="音" title="音"><svg class="ico" data-ico="sndOn" aria-hidden="true"></svg></button></div></header>
+<header><h1>1bit Calendar</h1><div class="hdr"><button type="button" id="langSw" lang="ja">日本語</button><button type="button" id="sound" aria-pressed="true" aria-label="音" title="音"><svg class="ico" data-ico="sndOn" aria-hidden="true"></svg></button></div></header>
 <button class="btn" id="resetColors" type="button">COLOR RESET</button>
 
 <main class="app">
@@ -683,7 +683,8 @@ function syncUI() {
   $('#invert').checked = S.dither.invert;
   $('#calShow').checked = S.cal.show;
   $('#monthLabel').textContent = S.lang === 'ja' ? S.cal.year + '年' + MONTH_JA(S.cal.month) : MONTHS[S.cal.month][0] + MONTHS[S.cal.month].slice(1).toLowerCase() + ' ' + S.cal.year;
-  document.querySelectorAll('#langSw button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.lang === S.lang)));
+  // 切り替え先の言語を、その言語で表示する
+  const ls = $('#langSw'); ls.textContent = S.lang === 'en' ? '日本語' : 'English'; ls.lang = S.lang === 'en' ? 'ja' : 'en';
   $('#calStyle').value = S.cal.style; $('#calWeek').value = String(S.cal.weekStart); $('#calLang').value = S.cal.lang;
   $('#calSize').value = S.cal.size; $('#v-calSize').textContent = '×' + S.cal.size.toFixed(2);
   $('#calFont').value = S.cal.font; $('#calFrame').checked = S.cal.frame; $('#calBg').checked = S.cal.bg;
@@ -1362,7 +1363,7 @@ function applyLang() {
   if (msg.textContent) msg.textContent = '';
   syncUI(); fit();
 }
-document.querySelectorAll('#langSw button').forEach(b => b.addEventListener('click', () => { S.lang = b.dataset.lang; applyLang(); }));
+$('#langSw').addEventListener('click', () => { S.lang = S.lang === 'en' ? 'ja' : 'en'; applyLang(); });
 
 /* ---------- 起動 ---------- */
 S.src = makeSample(); S.orig = S.src; S.crop = null; autoPlace();
