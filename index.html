@@ -70,7 +70,7 @@ header h1{ margin:0; font-size:20px; font-weight:400; letter-spacing:.04em; }
 }
 #fs{ position:fixed; inset:0; z-index:60; background:var(--bg); display:none; cursor:pointer; }
 #fs.open{ display:block; }
-#fsCv{ width:100%; height:100%; object-fit:contain; display:block; }
+#fsCv{ width:100%; height:100%; display:block; }
 #fsClose{ position:absolute; top:calc(env(safe-area-inset-top,0px) + 10px); right:10px; }
 .tabs{ display:grid; grid-template-columns:repeat(3,1fr); border-bottom:2px solid var(--fg); }
 .tabs button{
@@ -1131,11 +1131,28 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') closeCrop();
 
 /* ---------- 全画面表示 ---------- */
 const fs = $('#fs'), fsCv = $('#fsCv');
+let fsImg = null;
+// 余白は2色の市松模様の網点(壁紙の外だと分かるように)。壁紙のまわりにドットの色の細い枠
+function drawFs() {
+  if (!fsImg || !fs.classList.contains('open')) return;
+  const dpr = window.devicePixelRatio || 1, W = Math.round(fs.clientWidth * dpr), H = Math.round(fs.clientHeight * dpr);
+  fsCv.width = W; fsCv.height = H;
+  const g = fsCv.getContext('2d'), u = Math.max(1, Math.round(dpr)); // 網点1つ = 画面上の1px
+  const pc = document.createElement('canvas'); pc.width = pc.height = u * 2;
+  const pg = pc.getContext('2d');
+  pg.fillStyle = S.color.paper; pg.fillRect(0, 0, u * 2, u * 2);
+  pg.fillStyle = S.color.ink; pg.fillRect(0, 0, u, u); pg.fillRect(u, u, u, u);
+  g.fillStyle = g.createPattern(pc, 'repeat'); g.fillRect(0, 0, W, H);
+  const fr = 2 * u, k = Math.min((W - fr * 2) / S.W, (H - fr * 2) / S.H);
+  const w = Math.round(S.W * k), h = Math.round(S.H * k), x = Math.round((W - w) / 2), y = Math.round((H - h) / 2);
+  g.fillStyle = S.color.ink; g.fillRect(x - fr, y - fr, w + fr * 2, h + fr * 2);
+  g.imageSmoothingQuality = 'high'; g.drawImage(fsImg, x, y, w, h);
+}
 function openFs() {
-  fsCv.width = S.W; fsCv.height = S.H;
-  fsCv.getContext('2d').drawImage(finalImage(), 0, 0);
+  fsImg = finalImage();
   fs.classList.add('open');
-  if (fs.requestFullscreen) fs.requestFullscreen().catch(() => {});
+  drawFs();
+  if (fs.requestFullscreen) fs.requestFullscreen().then(() => setTimeout(drawFs, 50)).catch(() => {});
 }
 function closeFs() {
   fs.classList.remove('open');
@@ -1143,7 +1160,8 @@ function closeFs() {
 }
 $('#fsOpen').addEventListener('click', openFs);
 fs.addEventListener('click', closeFs);
-document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement) fs.classList.remove('open'); });
+document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement) fs.classList.remove('open'); else drawFs(); });
+window.addEventListener('resize', drawFs);
 
 /* ---------- 効果音(道具らしい短いクリック音。Web Audio で生成) ---------- */
 // 音階やメロディは使わず、スイッチやダイヤルのような短いノイズのクリックで鳴らす
