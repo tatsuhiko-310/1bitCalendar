@@ -759,6 +759,7 @@
     }
   }
   $('#size').addEventListener('change', e => {
+    e.target.blur(); // 選んだあとに選択中の状態を残さない
     setSize(e.target.value);
     fit();
     syncUI();

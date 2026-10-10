@@ -83,7 +83,8 @@ header {
   opacity: 0;
   cursor: pointer;
 }
-.sizebox:focus-within #sizeLabel {
+/* キーボードで選んでいるときだけ下線(タップ後に残らないよう :focus-visible で判定) */
+.sizebox:has(select:focus-visible) #sizeLabel {
   text-decoration: underline dashed;
   text-underline-offset: 3px;
 }
