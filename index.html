@@ -38,7 +38,17 @@ header h1{ margin:0; font-size:20px; font-weight:400; letter-spacing:.04em; }
   background:var(--bg); padding:10px;
 }
 .cvbox{ flex:1; min-height:0; display:flex; align-items:center; justify-content:center; }
-.seg.tools{ grid-template-columns:repeat(4,1fr); width:100%; max-width:480px; margin:0 auto; flex:none; }
+.tools{ display:flex; gap:8px; width:100%; max-width:480px; margin:0 auto; flex:none; }
+.tools .seg{ flex:1; min-width:0; display:flex; }
+.tools .seg button{ flex:1 1 auto; font-size:13px; padding:0 6px; white-space:nowrap; }
+.tools > .btn{ flex:none; min-height:44px; padding:4px 8px; font-size:13px; white-space:nowrap; }
+.tools .btn.primary{ display:flex; align-items:center; gap:6px; }
+.tools .btn.primary .ico{ width:16px; height:16px; }
+/* ON/OFF はボタン全体を塗らず、■(ON)/□(OFF)の印で示す */
+.tog[aria-pressed]{ display:flex; align-items:center; justify-content:center; gap:5px; }
+.seg .tog[aria-pressed="true"]{ background:var(--panel); color:var(--fg); }
+.tog::before{ content:""; flex:none; width:12px; height:12px; box-sizing:border-box; border:2px solid currentColor; }
+.tog[aria-pressed="true"]::before{ background:currentColor; }
 #cv{
   display:block; touch-action:none; cursor:grab;
   border:2px solid var(--fg); box-shadow:4px 4px 0 var(--fg);
@@ -47,19 +57,18 @@ header h1{ margin:0; font-size:20px; font-weight:400; letter-spacing:.04em; }
 #cv.dragging{ cursor:grabbing; }
 
 .panel{
-  --fg:var(--paper); --bg:var(--ink); --panel:var(--ink); --mute:var(--paper); --on-fg:var(--ink);
-  margin:6px 12px 24px; background:var(--ink); color:var(--fg);
-  border:2px solid var(--ink); box-shadow:4px 4px 0 var(--ink);
+  margin:6px 12px 24px; background:var(--panel); color:var(--fg);
+  border:2px solid var(--fg);
 }
 #fs{ position:fixed; inset:0; z-index:60; background:var(--bg); display:none; cursor:pointer; }
 #fs.open{ display:block; }
 #fsCv{ width:100%; height:100%; object-fit:contain; display:block; }
 #fsClose{ position:absolute; top:calc(env(safe-area-inset-top,0px) + 10px); right:10px; }
-.tabs{ display:grid; grid-template-columns:repeat(4,1fr); border-bottom:2px solid var(--fg); }
+.tabs{ display:grid; grid-template-columns:repeat(3,1fr); border-bottom:2px solid var(--fg); }
 .tabs button{
   font:inherit; color:var(--fg); background:transparent; border:0; border-right:2px solid var(--fg);
-  min-height:44px; padding:6px 4px; cursor:pointer;
-  display:flex; align-items:center; justify-content:center;
+  min-height:44px; padding:6px 4px 4px; cursor:pointer;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; font-size:12px; line-height:1.2;
 }
 .ico{ width:32px; height:32px; display:block; fill:currentColor; shape-rendering:crispEdges; }
 .tabs button:last-child{ border-right:0; }
@@ -79,6 +88,8 @@ input[type=range]{ -webkit-appearance:none; appearance:none; width:100%; height:
 input[type=range]::-webkit-slider-runnable-track{ height:8px; border:2px solid var(--fg); background:var(--panel); }
 input[type=range]::-moz-range-track{ height:4px; border:2px solid var(--fg); background:var(--panel); }
 input[type=range]::-webkit-slider-thumb{ -webkit-appearance:none; width:20px; height:24px; margin-top:-10px; border:0; border-radius:0; background:var(--fg); }
+input[type=range].inert::-webkit-slider-runnable-track{ border-style:dashed; }
+input[type=range].inert::-moz-range-track{ border-style:dashed; }
 input[type=range]::-moz-range-thumb{ width:20px; height:24px; border:0; border-radius:0; background:var(--fg); }
 input[type=checkbox]{ -webkit-appearance:none; appearance:none; flex:none; width:20px; height:20px; margin:0; border:2px solid var(--fg); border-radius:0; background:var(--panel); cursor:pointer; }
 input[type=checkbox]:checked{ background:var(--fg); box-shadow:inset 0 0 0 3px var(--panel); }
@@ -121,7 +132,10 @@ button:focus-visible,select:focus-visible,input:focus-visible{ outline:3px dashe
 #cropCv{ display:block; touch-action:none; outline:2px solid var(--fg); background:var(--bg); }
 .cropbtns{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
 
-#msg{ min-height:1.5em; font-size:13px; margin:0; }
+#cropBtns.single{ grid-template-columns:1fr; }
+#cropBtns.single #cropReset{ display:none; }
+#msg{ font-size:13px; margin:-8px 0 0; }
+#msg:empty{ display:none; }
 
 #overlay{
   position:fixed; inset:0; z-index:50; background:var(--bg);
@@ -147,42 +161,56 @@ button:focus-visible,select:focus-visible,input:focus-visible{ outline:3px dashe
 <main class="app">
   <section class="stage" id="stage" aria-label="プレビュー">
     <div class="cvbox" id="cvbox"><canvas id="cv" width="1179" height="2556" role="img" aria-label="壁紙のプレビュー。ドラッグで写真やカレンダーを動かせます"></canvas></div>
-    <div class="seg tools">
-      <button type="button" id="guide" aria-pressed="false">ガイド</button>
-      <button type="button" id="snap" aria-pressed="true">スナップ</button>
-      <button type="button" id="sound" aria-pressed="true">音</button>
-      <button type="button" id="fsOpen">全画面</button>
+    <div class="tools">
+      <div class="seg" role="group" aria-label="プレビューの設定">
+        <button type="button" class="tog" id="guide" aria-pressed="false">ガイド</button>
+        <button type="button" class="tog" id="snap" aria-pressed="true">スナップ</button>
+        <button type="button" class="tog" id="sound" aria-pressed="true">音</button>
+      </div>
+      <button class="btn" id="fsOpen" type="button">全画面</button>
+      <button class="btn primary" id="save" type="button"><svg class="ico" data-ico="out" aria-hidden="true"></svg>保存</button>
     </div>
   </section>
 
   <section class="panel">
     <div class="tabs" role="tablist">
-      <button role="tab" id="t-photo" aria-selected="true" aria-controls="pane-photo" data-tab="photo" aria-label="写真" title="写真"><svg class="ico" data-ico="photo" aria-hidden="true"></svg></button>
-      <button role="tab" id="t-cal" aria-selected="false" aria-controls="pane-cal" data-tab="cal" aria-label="カレンダー" title="カレンダー"><svg class="ico" data-ico="cal" aria-hidden="true"></svg></button>
-      <button role="tab" id="t-color" aria-selected="false" aria-controls="pane-color" data-tab="color" aria-label="色" title="色"><svg class="ico" data-ico="color" aria-hidden="true"></svg></button>
-      <button role="tab" id="t-out" aria-selected="false" aria-controls="pane-out" data-tab="out" aria-label="出力" title="出力"><svg class="ico" data-ico="out" aria-hidden="true"></svg></button>
+      <button role="tab" id="t-photo" aria-selected="true" aria-controls="pane-photo" data-tab="photo"><svg class="ico" data-ico="photo" aria-hidden="true"></svg>写真</button>
+      <button role="tab" id="t-cal" aria-selected="false" aria-controls="pane-cal" data-tab="cal"><svg class="ico" data-ico="cal" aria-hidden="true"></svg>カレンダー</button>
+      <button role="tab" id="t-color" aria-selected="false" aria-controls="pane-color" data-tab="color"><svg class="ico" data-ico="color" aria-hidden="true"></svg>色</button>
     </div>
 
     <div class="panes">
     <!-- 写真 -->
     <div class="pane" id="pane-photo" role="tabpanel" aria-labelledby="t-photo">
+      <div class="row">
+        <label for="size">画像のサイズ</label>
+        <select id="size">
+          <option value="1179x2556">iPhone(1179×2556)</option>
+          <option value="1290x2796">iPhone Pro Max(1290×2796)</option>
+          <option value="1080x2400">Android(1080×2400)</option>
+          <option value="1640x2360">iPad(1640×2360)</option>
+          <option value="1920x1080">PC(1920×1080)</option>
+          <option value="1080x1080">正方形(1080×1080)</option>
+        </select>
+      </div>
       <div>
         <input type="file" id="file" accept="image/*" hidden>
         <button class="btn primary wide" id="pick" type="button">写真を選ぶ</button>
       </div>
-      <div class="two">
+      <p id="msg" role="status" aria-live="polite"></p>
+      <div class="two" id="cropBtns">
         <button class="btn" id="cropOpen" type="button">トリミング</button>
         <button class="btn" id="cropReset" type="button">トリミング解除</button>
       </div>
       <div class="row">
-        <label for="algo">ディザの方式</label>
+        <label for="algo">ドットの模様</label>
         <select id="algo">
-          <option value="b2">ベイヤー 2×2</option>
-          <option value="b4" selected>ベイヤー 4×4</option>
-          <option value="b8">ベイヤー 8×8</option>
-          <option value="fs">フロイド・スタインバーグ</option>
-          <option value="at">アトキンソン</option>
-          <option value="th">しきい値(2値化)</option>
+          <option value="b2">格子(粗い)</option>
+          <option value="b4" selected>格子</option>
+          <option value="b8">格子(細かい)</option>
+          <option value="fs">砂目</option>
+          <option value="at">砂目(くっきり)</option>
+          <option value="th">白黒のみ</option>
         </select>
       </div>
       <div class="row">
@@ -202,7 +230,7 @@ button:focus-visible,select:focus-visible,input:focus-visible{ outline:3px dashe
         <input type="range" id="pscale" min="0.2" max="4" step="0.01">
       </div>
       <label class="check"><input type="checkbox" id="invert">明暗を反転する</label>
-      <button class="btn wide" id="resetPhoto" type="button">写真の位置をもどす</button>
+      <button class="btn wide" id="resetPhoto" type="button">写真の位置をリセット</button>
     </div>
 
     <!-- カレンダー -->
@@ -215,7 +243,7 @@ button:focus-visible,select:focus-visible,input:focus-visible{ outline:3px dashe
       </div>
       <button class="btn wide" id="thisM" type="button">今月にする</button>
       <div class="row">
-        <label for="calStyle">スタイル</label>
+        <label for="calStyle">レイアウト</label>
         <select id="calStyle">
           <option value="grid">グリッド</option>
           <option value="list">縦リスト</option>
@@ -254,11 +282,13 @@ button:focus-visible,select:focus-visible,input:focus-visible{ outline:3px dashe
       </div>
       <label class="check"><input type="checkbox" id="calFrame">枠をつける</label>
       <label class="check"><input type="checkbox" id="calBg">背景をつける</label>
-      <button class="btn wide" id="resetCal" type="button">カレンダーの位置をもどす</button>
+      <button class="btn wide" id="resetCal" type="button">カレンダーの位置をリセット</button>
     </div>
 
     <!-- 色 -->
     <div class="pane" id="pane-color" role="tabpanel" aria-labelledby="t-color" hidden>
+      <div class="swatches" id="swatches"></div>
+      <button class="btn wide" id="swapColors" type="button">ドットと背景を入れ替え</button>
       <div class="sec hd"><span>ドットの色</span><span class="val" id="v-ink"></span></div>
       <div class="row">
         <div class="top"><label for="ink-h">色相</label><span class="val" id="v-ink-h"></span></div>
@@ -285,29 +315,8 @@ button:focus-visible,select:focus-visible,input:focus-visible{ outline:3px dashe
         <div class="top"><label for="paper-l">明るさ</label><span class="val" id="v-paper-l"></span></div>
         <input type="range" id="paper-l" data-c="paper" data-i="2" min="0" max="100" step="1">
       </div>
-      <button class="btn wide" id="swapColors" type="button">色を反転</button>
-      <div class="row">
-        <span class="sec">テンプレート</span>
-        <div class="swatches" id="swatches"></div>
-      </div>
     </div>
 
-    <!-- 出力 -->
-    <div class="pane" id="pane-out" role="tabpanel" aria-labelledby="t-out" hidden>
-      <div class="row">
-        <label for="size">画像のサイズ</label>
-        <select id="size">
-          <option value="1179x2556">iPhone(1179×2556)</option>
-          <option value="1290x2796">iPhone Pro Max(1290×2796)</option>
-          <option value="1080x2400">Android(1080×2400)</option>
-          <option value="1640x2360">iPad(1640×2360)</option>
-          <option value="1920x1080">PC(1920×1080)</option>
-          <option value="1080x1080">正方形(1080×1080)</option>
-        </select>
-      </div>
-      <button class="btn primary wide" id="save" type="button">PNGで保存する</button>
-      <p id="msg" role="status" aria-live="polite"></p>
-    </div>
     </div>
   </section>
 </main>
@@ -657,9 +666,14 @@ function syncUI() {
   ['ink', 'paper'].forEach(c => {
     $('#v-' + c).textContent = S.color[c].toUpperCase();
     'hsl'.split('').forEach((k, i) => { $(`#${c}-${k}`).value = S.hsl[c][i]; $(`#v-${c}-${k}`).textContent = S.hsl[c][i]; });
+    // 色が出ない組み合わせ(灰色・真っ黒・真っ白)では、効かないスライダーを点線にする
+    const [, sat, lit] = S.hsl[c], flat = lit === 0 || lit === 100;
+    $(`#${c}-h`).classList.toggle('inert', flat || sat === 0);
+    $(`#${c}-s`).classList.toggle('inert', flat);
   });
   document.querySelectorAll('.sw').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.ink === S.color.ink && b.dataset.paper === S.color.paper)));
   $('#size').value = S.W + 'x' + S.H;
+  $('#cropBtns').classList.toggle('single', !S.crop);
   applyTheme();
 }
 
@@ -715,12 +729,22 @@ $('#thisM').addEventListener('click', () => { S.cal.year = now.getFullYear(); S.
 $('#resetCal').addEventListener('click', () => { S.cal.x = .5; S.cal.y = .74; S.cal.size = 1; syncUI(); schedule(); });
 $('#resetPhoto').addEventListener('click', () => { autoPlace(); syncUI(); schedule(); });
 
-$('#size').addEventListener('change', e => {
-  const [w, h] = e.target.value.split('x').map(Number);
+function setSize(v) {
+  const [w, h] = v.split('x').map(Number);
   S.W = w; S.H = h; cv.width = w; cv.height = h;
   if (w > h) { S.photo.y = .5; S.cal.y = .5; S.cal.x = .75; S.cal.size = .8; }
-  fit(); syncUI(); schedule();
-});
+}
+$('#size').addEventListener('change', e => { setSize(e.target.value); fit(); syncUI(); schedule(); });
+// スマホで開いたときは、その端末の画面サイズを最初から選んでおく
+(() => {
+  if (!window.matchMedia('(pointer: coarse)').matches) return;
+  const r = window.devicePixelRatio || 1, a = Math.round(screen.width * r), b = Math.round(screen.height * r);
+  const w = Math.min(a, b), h = Math.max(a, b);
+  if (w < 600 || h > 4000) return;
+  const v = w + 'x' + h, sel = $('#size');
+  if (![...sel.options].some(o => o.value === v)) sel.insertAdjacentHTML('afterbegin', `<option value="${v}">この端末(${w}×${h})</option>`);
+  setSize(v);
+})();
 
 // 配色
 const sws = $('#swatches');
@@ -1197,7 +1221,7 @@ document.querySelectorAll('svg.ico').forEach(svg => {
 });
 
 /* ---------- 起動 ---------- */
-S.src = makeSample(); S.orig = S.src; S.crop = null;
+S.src = makeSample(); S.orig = S.src; S.crop = null; autoPlace();
 syncUI(); fit(); render(true);
 window.addEventListener('resize', fit);
 if (window.ResizeObserver) new ResizeObserver(fit).observe($('#cvbox'));
