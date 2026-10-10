@@ -131,8 +131,9 @@ button:focus-visible,select:focus-visible,input:focus-visible{ outline:3px dashe
 .seg button + button{ border-left:2px solid var(--fg); }
 .seg button[aria-pressed="true"]{ background:var(--fg); color:var(--on-fg); }
 .sec.hd{ display:flex; justify-content:space-between; align-items:center; }
-.hex{ font:inherit; font-size:14px; width:7.5em; min-height:36px; padding:2px 8px; text-align:right; text-transform:uppercase;
-  color:var(--fg); background:var(--panel); border:2px solid var(--fg); border-radius:0; }
+.hex{ font:inherit; font-size:14px; width:7.5em; min-height:36px; padding:2px 0; text-align:right; text-transform:uppercase;
+  color:var(--fg); background:transparent; border:0; border-radius:0; }
+.hex:focus{ outline:none; text-decoration:underline; }
 
 #crop{ position:fixed; inset:0; z-index:70; background:var(--bg); color:var(--fg); display:none; flex-direction:column; gap:10px; padding:calc(env(safe-area-inset-top,0px) + 10px) 10px calc(env(safe-area-inset-bottom,0px) + 10px); }
 #crop.open{ display:flex; }
