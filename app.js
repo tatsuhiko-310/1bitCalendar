@@ -613,6 +613,9 @@
         )
       );
     $('#size').value = S.W + 'x' + S.H;
+    // ヘッダーには寸法を除いた短い名前だけ出す(例: iPhone、この端末)
+    const so = $('#size').selectedOptions[0];
+    $('#sizeLabel').textContent = so ? so.textContent.replace(/\s*\(.*$/, '') : '';
     $('#cropBtns').classList.toggle('single', !S.crop);
     applyTheme();
   }

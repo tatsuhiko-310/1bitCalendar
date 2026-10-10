@@ -16,6 +16,17 @@
     <header>
       <h1>1bit Calendar</h1>
       <div class="hdr">
+        <label class="sizebox">
+          <span id="sizeLabel" aria-hidden="true"></span>
+          <select id="size" aria-label="画像のサイズ">
+            <option value="1179x2556">iPhone(1179×2556)</option>
+            <option value="1290x2796">iPhone Pro Max(1290×2796)</option>
+            <option value="1080x2400">Android(1080×2400)</option>
+            <option value="1640x2360">iPad(1640×2360)</option>
+            <option value="1920x1080">PC(1920×1080)</option>
+            <option value="1080x1080">正方形(1080×1080)</option>
+          </select>
+        </label>
         <button type="button" id="langSw">EN</button>
         <button type="button" id="sound" aria-pressed="true" aria-label="音" title="音">
           <svg class="ico" data-ico="sndOn" aria-hidden="true"></svg>
@@ -67,17 +78,6 @@
         <div class="panes">
           <!-- 写真 -->
           <div class="pane" id="pane-photo" role="tabpanel" aria-labelledby="t-photo">
-            <div class="row">
-              <label for="size">画像のサイズ</label>
-              <select id="size">
-                <option value="1179x2556">iPhone(1179×2556)</option>
-                <option value="1290x2796">iPhone Pro Max(1290×2796)</option>
-                <option value="1080x2400">Android(1080×2400)</option>
-                <option value="1640x2360">iPad(1640×2360)</option>
-                <option value="1920x1080">PC(1920×1080)</option>
-                <option value="1080x1080">正方形(1080×1080)</option>
-              </select>
-            </div>
             <div>
               <input type="file" id="file" accept="image/*" hidden />
               <button class="btn primary wide" id="pick" type="button">写真を選ぶ</button>
