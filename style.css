@@ -56,7 +56,6 @@ header {
   align-items: center;
   gap: 2px;
 }
-/* ヘッダーの設定は控えめに: 枠なしの小さい文字と等倍アイコン。押せる範囲は44pxのまま */
 /* 画像のサイズ: プレビューの上に寸法だけを出す(左端はプレビューにそろえ、幅は fit() が設定)。
    その上に透明な select を重ねて、押すと「iPhone 1179×2556」のような一覧が開く */
 .sizebox {
@@ -64,28 +63,11 @@ header {
   align-self: center;
   display: flex;
   align-items: center;
-  height: 28px;
+  height: 22px;
   font-size: 13px;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
   cursor: pointer;
-}
-#sizeLabel {
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-.sizebox select {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  min-height: 0;
-  padding: 0;
-  border: 0;
-  opacity: 0;
-  cursor: pointer;
-}
-.sizebox:focus-within #sizeLabel {
-  text-decoration-style: dashed;
 }
 .sizebox::after {
   content: '▾';
@@ -102,8 +84,10 @@ header {
   cursor: pointer;
 }
 .sizebox:focus-within #sizeLabel {
-  text-decoration-style: dashed;
+  text-decoration: underline dashed;
+  text-underline-offset: 3px;
 }
+/* ヘッダーの設定は控えめに: 枠なしの小さい文字と等倍アイコン。押せる範囲は44pxのまま */
 #langSw {
   font: inherit;
   font-size: 12px;
@@ -194,7 +178,7 @@ header h1 {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: 2px;
 }
 .tools {
   display: flex;

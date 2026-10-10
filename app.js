@@ -539,7 +539,7 @@
       shadow = 4;
     const aw = Math.max(50, stage.clientWidth - pad - shadow);
     const sizebar = $('.sizebox'),
-      sizeH = sizebar.offsetHeight + 6;
+      sizeH = sizebar.offsetHeight + 2;
     const ah = Math.max(50, stage.clientHeight - pad - gap - tools.offsetHeight - sizeH - shadow);
     const k = Math.min(aw / S.W, ah / S.H),
       w = Math.floor(S.W * k);
