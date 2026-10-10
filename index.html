@@ -173,7 +173,7 @@ button:focus-visible,select:focus-visible,input:focus-visible{ outline:3px dashe
 </style>
 </head>
 <body>
-<header><h1>1bit Calendar</h1><div class="hdr"><button type="button" id="langSw" lang="ja">日本語</button><button type="button" id="sound" aria-pressed="true" aria-label="音" title="音"><svg class="ico" data-ico="sndOn" aria-hidden="true"></svg></button></div></header>
+<header><h1>1bit Calendar</h1><div class="hdr"><button type="button" id="langSw">EN</button><button type="button" id="sound" aria-pressed="true" aria-label="音" title="音"><svg class="ico" data-ico="sndOn" aria-hidden="true"></svg></button></div></header>
 <button class="btn" id="resetColors" type="button">COLOR RESET</button>
 
 <main class="app">
@@ -687,8 +687,9 @@ function syncUI() {
   $('#invert').checked = S.dither.invert;
   $('#calShow').checked = S.cal.show;
   $('#monthLabel').textContent = S.lang === 'ja' ? S.cal.year + '年' + MONTH_JA(S.cal.month) : MONTHS[S.cal.month][0] + MONTHS[S.cal.month].slice(1).toLowerCase() + ' ' + S.cal.year;
-  // 切り替え先の言語を、その言語で表示する
-  const ls = $('#langSw'); ls.textContent = S.lang === 'en' ? '日本語' : 'English'; ls.lang = S.lang === 'en' ? 'ja' : 'en';
+  // 今の言語のコードを表示(押すたびに EN と JA が入れ替わる)
+  const ls = $('#langSw'); ls.textContent = S.lang.toUpperCase();
+  ls.setAttribute('aria-label', S.lang === 'en' ? 'Language: English' : '言語: 日本語');
   $('#calStyle').value = S.cal.style; $('#calWeek').value = String(S.cal.weekStart); $('#calLang').value = S.cal.lang;
   $('#calSize').value = S.cal.size; $('#v-calSize').textContent = '×' + S.cal.size.toFixed(2);
   $('#calFont').value = S.cal.font; $('#calFrame').checked = S.cal.frame; $('#calBg').checked = S.cal.bg;
