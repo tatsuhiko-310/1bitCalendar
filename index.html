@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -27,6 +27,8 @@ body{
 }
 
 header{ height:44px; display:flex; align-items:center; justify-content:space-between; padding:0 4px 0 14px; }
+.hdr{ display:flex; align-items:center; gap:4px; }
+#langSw button{ min-height:30px; padding:0 8px; font-size:13px; }
 #sound{ width:44px; height:44px; padding:0; border:0; background:transparent; color:var(--fg); cursor:pointer; display:grid; place-items:center; }
 /* 2色が近くて見にくいときだけ、画面右上に上からスライドインする */
 #resetColors{
@@ -167,7 +169,7 @@ button:focus-visible,select:focus-visible,input:focus-visible{ outline:3px dashe
 </style>
 </head>
 <body>
-<header><h1>1bit Calendar</h1><button type="button" id="sound" aria-pressed="true" aria-label="音" title="音"><svg class="ico" data-ico="sndOn" aria-hidden="true"></svg></button></header>
+<header><h1>1bit Calendar</h1><div class="hdr"><div class="seg" id="langSw" role="group" aria-label="言語"><button type="button" data-lang="ja" aria-pressed="false">JA</button><button type="button" data-lang="en" aria-pressed="true">EN</button></div><button type="button" id="sound" aria-pressed="true" aria-label="音" title="音"><svg class="ico" data-ico="sndOn" aria-hidden="true"></svg></button></div></header>
 <button class="btn" id="resetColors" type="button">COLOR RESET</button>
 
 <main class="app">
@@ -377,7 +379,8 @@ const S = {
   photo: { x: .5, y: .36, scale: 1 },
   dither: { algo: 'b4', px: 4, bright: 0, contrast: 0, invert: false },
   cal: { show: true, x: .5, y: .74, size: 1, year: now.getFullYear(), month: now.getMonth(),
-         style: 'grid', weekStart: 0, lang: 'ja', font: 'DotGothic16', frame: true, bg: true },
+         style: 'grid', weekStart: 0, lang: 'en', font: 'DotGothic16', frame: true, bg: true },
+  lang: 'en',
   color: { ink: '#000000', paper: '#ffffff' },
   hsl: { ink: [0, 0, 0], paper: [0, 0, 100] },
   guide: false, snap: true, sound: true,
@@ -679,7 +682,8 @@ function syncUI() {
   $('#pscale').value = S.photo.scale; $('#v-pscale').textContent = '×' + S.photo.scale.toFixed(2);
   $('#invert').checked = S.dither.invert;
   $('#calShow').checked = S.cal.show;
-  $('#monthLabel').textContent = S.cal.year + '年' + MONTH_JA(S.cal.month);
+  $('#monthLabel').textContent = S.lang === 'ja' ? S.cal.year + '年' + MONTH_JA(S.cal.month) : MONTHS[S.cal.month][0] + MONTHS[S.cal.month].slice(1).toLowerCase() + ' ' + S.cal.year;
+  document.querySelectorAll('#langSw button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.lang === S.lang)));
   $('#calStyle').value = S.cal.style; $('#calWeek').value = String(S.cal.weekStart); $('#calLang').value = S.cal.lang;
   $('#calSize').value = S.cal.size; $('#v-calSize').textContent = '×' + S.cal.size.toFixed(2);
   $('#calFont').value = S.cal.font; $('#calFrame').checked = S.cal.frame; $('#calBg').checked = S.cal.bg;
@@ -783,7 +787,7 @@ $('#size').addEventListener('change', e => { setSize(e.target.value); fit(); syn
   const w = Math.min(a, b), h = Math.max(a, b);
   if (w < 600 || h > 4000) return;
   const v = w + 'x' + h, sel = $('#size');
-  if (![...sel.options].some(o => o.value === v)) sel.insertAdjacentHTML('afterbegin', `<option value="${v}">この端末(${w}×${h})</option>`);
+  if (![...sel.options].some(o => o.value === v)) sel.insertAdjacentHTML('afterbegin', `<option value="${v}" data-device="${w}×${h}"></option>`);
   setSize(v);
 })();
 
@@ -791,7 +795,7 @@ $('#size').addEventListener('change', e => { setSize(e.target.value); fit(); syn
 const sws = $('#swatches');
 PRESETS.forEach(([name, ink, paper]) => {
   const b = document.createElement('button');
-  b.type = 'button'; b.className = 'sw'; b.title = name; b.setAttribute('aria-label', '配色: ' + name);
+  b.type = 'button'; b.className = 'sw';
   b.textContent = (ink + '×' + paper).toUpperCase(); b.dataset.ink = ink; b.dataset.paper = paper;
   b.addEventListener('click', () => { setColors(ink, paper); syncUI(); schedule(); });
   sws.appendChild(b);
@@ -809,10 +813,10 @@ $('#pick').addEventListener('click', () => $('#file').click());
 $('#file').addEventListener('change', e => {
   const file = e.target.files && e.target.files[0]; if (!file) return;
   const fr = new FileReader();
-  fr.onerror = () => { msg.textContent = '写真を読み込めませんでした。'; };
+  fr.onerror = () => { msg.textContent = t('写真を読み込めませんでした。'); };
   fr.onload = () => {
     const im = new Image();
-    im.onerror = () => { msg.textContent = '写真を読み込めませんでした。JPEG・PNG・WebPを選んでください。'; };
+    im.onerror = () => { msg.textContent = t('写真を読み込めませんでした。JPEG・PNG・WebPを選んでください。'); };
     im.onload = () => {
       const k = Math.min(1, 2400 / Math.max(im.width, im.height));
       const c = document.createElement('canvas');
@@ -917,7 +921,7 @@ $('#save').addEventListener('click', async () => {
     else download(blob, name);
     sfx.save();
   } catch (err) {
-    if (err && err.code === 'declined') msg.textContent = '保存をキャンセルしました。';
+    if (err && err.code === 'declined') msg.textContent = t('保存をキャンセルしました。');
     else showOverlay(img);
   }
 });
@@ -1310,9 +1314,59 @@ function drawIcon(svg, name) {
 }
 document.querySelectorAll('svg.ico').forEach(svg => drawIcon(svg, svg.dataset.ico));
 
+/* ---------- 言語(日本語 / English。初期は English) ---------- */
+// HTML は日本語で書き、英語はこの表で置き換える。UI に文言を足したら、ここにも英語を足すこと
+const EN = {
+  '音': 'Sound', '言語': 'Language', 'プレビュー': 'Preview', 'プレビューの設定': 'Preview settings',
+  '壁紙のプレビュー。ドラッグで写真やカレンダーを動かせます': 'Wallpaper preview. Drag to move the photo or calendar.',
+  'ガイド': 'Guide', 'スナップ': 'Snap', '全画面': 'Fullscreen', '保存': 'Save',
+  '写真': 'Photo', 'カレンダー': 'Calendar', '色': 'Color',
+  '画像のサイズ': 'Image size', '正方形(1080×1080)': 'Square (1080×1080)', 'この端末': 'This device',
+  '写真を選ぶ': 'Choose photo', 'トリミング': 'Crop', 'トリミング解除': 'Remove crop',
+  'ドットの模様': 'Dot pattern', '格子(粗い)': 'Grid (coarse)', '格子': 'Grid', '格子(細かい)': 'Grid (fine)',
+  '砂目': 'Grain', '砂目(くっきり)': 'Grain (crisp)', '白黒のみ': 'No dither',
+  'ドットの大きさ': 'Dot size', '明るさ': 'Brightness', 'コントラスト': 'Contrast', '写真の大きさ': 'Photo size',
+  '明暗を反転する': 'Invert tones', '写真の位置をリセット': 'Reset photo position',
+  'カレンダーを表示する': 'Show calendar', '前の月': 'Previous month', '次の月': 'Next month', '今月にする': 'This month',
+  'レイアウト': 'Layout', 'グリッド': 'Grid', '縦リスト': 'List', '2列リスト': '2-column list', '縦横入れ替え': 'Transposed',
+  'ビッグ月': 'Big month', '1行': 'Single row', '数字のみ': 'Numbers only',
+  'フォント': 'Font', 'ドット(ドットゴシック)': 'Dot (DotGothic)', 'ピクセル(英数字)': 'Pixel (Latin only)', 'ターミナル': 'Terminal',
+  '等幅': 'Monospace', '明朝': 'Mincho', '極太ゴシック': 'Heavy gothic', '手書き': 'Handwritten',
+  '週の始まり': 'Week starts on', '日曜': 'Sunday', '月曜': 'Monday',
+  'カレンダーの大きさ': 'Calendar size', '枠をつける': 'Frame', '背景をつける': 'Background', 'カレンダーの位置をリセット': 'Reset calendar position',
+  'ドットと背景を入れ替え': 'Swap dot and background', 'ドットの色': 'Dot color', '背景の色': 'Background color',
+  '色相': 'Hue', '鮮やかさ': 'Saturation',
+  '写真をトリミング': 'Crop photo', '縦横比': 'Aspect ratio', '自由': 'Free', '画面': 'Screen',
+  'キャンセル': 'Cancel', '全体': 'Full image', '適用': 'Apply',
+  '壁紙の全画面表示': 'Fullscreen wallpaper', '閉じる': 'Close', '画像を保存': 'Save image', '書き出した壁紙': 'Exported wallpaper',
+  '画像を長押し(PCは右クリック)して保存できます。': 'Long-press the image (right-click on PC) to save it.',
+  '写真を読み込めませんでした。': "Couldn't load the photo.",
+  '写真を読み込めませんでした。JPEG・PNG・WebPを選んでください。': "Couldn't load the photo. Choose a JPEG, PNG or WebP file.",
+  '保存をキャンセルしました。': 'Save canceled.'
+};
+const t = ja => S.lang === 'en' ? (EN[ja] || ja) : ja;
+// 置き換え対象の文字と属性を、最初に日本語の原文ごと覚えておく
+const i18nText = [], i18nAttr = [];
+(() => {
+  const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, { acceptNode: n => n.parentNode.closest('script,style') ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT });
+  for (let n; (n = w.nextNode());) { const ja = n.nodeValue.trim(); if (EN[ja]) i18nText.push({ n, ja, raw: n.nodeValue }); }
+  document.querySelectorAll('[aria-label],[title],[alt]').forEach(el => ['aria-label', 'title', 'alt'].forEach(a => {
+    const ja = el.getAttribute(a); if (ja && EN[ja]) i18nAttr.push({ el, a, ja });
+  }));
+})();
+function applyLang() {
+  document.documentElement.lang = S.lang;
+  i18nText.forEach(({ n, ja, raw }) => { n.nodeValue = raw.replace(ja, t(ja)); });
+  i18nAttr.forEach(({ el, a, ja }) => el.setAttribute(a, t(ja)));
+  document.querySelectorAll('option[data-device]').forEach(o => { o.textContent = `${t('この端末')}(${o.dataset.device})`; });
+  if (msg.textContent) msg.textContent = '';
+  syncUI(); fit();
+}
+document.querySelectorAll('#langSw button').forEach(b => b.addEventListener('click', () => { S.lang = b.dataset.lang; applyLang(); }));
+
 /* ---------- 起動 ---------- */
 S.src = makeSample(); S.orig = S.src; S.crop = null; autoPlace();
-syncUI(); fit(); render(true);
+applyLang(); render(true);
 window.addEventListener('resize', fit);
 if (window.ResizeObserver) new ResizeObserver(fit).observe($('#stage'));
 if (document.fonts && document.fonts.load) {
